@@ -1,0 +1,20 @@
+<mat-sidenav-container class="sidenav-container">
+  <mat-sidenav #drawer class="sidenav" fixedInViewport role="dialog" mode="push" openedlocal="false">
+    <mat-toolbar>Menu</mat-toolbar>
+    <mat-nav-list>
+      <a *ngFor="let item of menuItems" mat-list-item [routerLink]="item.path">
+        <mat-icon mat-list-icon>{{ item.icon }}</mat-icon>
+        <span mat-line>{{ item.label }}</span>
+      </a>
+    </mat-nav-list>
+  </mat-sidenav>
+  <mat-sidenav-content>
+    <mat-toolbar color="primary">
+      <app-logo></app-logo>
+      <button type="button" aria-label="Toggle sidenav" mat-icon-button (click)="drawer.toggle()">
+        <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
+      </button>
+    </mat-toolbar>
+    <ng-content></ng-content>
+  </mat-sidenav-content>
+</mat-sidenav-container>

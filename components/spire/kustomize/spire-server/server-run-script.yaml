@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: spire-server-run-script
+data:
+  run_server.sh: |
+    #!/bin/sh
+    echo "${@}"
+    /opt/spire/tornjak-agent -c $2 http &
+    /usr/bin/dumb-init /opt/spire/bin/spire-server run "${@}"

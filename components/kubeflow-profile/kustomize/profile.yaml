@@ -1,0 +1,9 @@
+---
+apiVersion: kubeflow.org/v1beta1
+kind: Profile
+metadata:
+  name: katulu-fl
+spec:
+  owner:
+    kind: User
+    name: admin@katulu.io

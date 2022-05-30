@@ -1,0 +1,20 @@
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: fl-orchestrator-envoyproxy
+spec:
+  gateways:
+    - fl-orchestrator-envoyproxy
+  hosts:
+    - "*"
+  tls:
+    - match:
+        - port: 443
+          sniHosts:
+            - "*"
+      route:
+        - destination:
+            host: fl-orchestrator-envoyproxy.katulu-fl.svc.cluster.local
+            port:
+              number: 9001

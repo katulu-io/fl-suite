@@ -1,0 +1,17 @@
+{
+  "name": "@katulu/release",
+  "version": "0.0.0-dev",
+  "description": "Release scripts",
+  "scripts": {
+    "env": "yarn node ./env.js",
+    "publish": "yarn node ./publish.js",
+    "K": "yarn node ./src/kustomize.js"
+  },
+  "devDependencies": {
+    "jest": "^27.5.1",
+    "lodash.template": "^4.5.0",
+    "semantic-release": "^17.3.1",
+    "tar": "^6.1.11",
+    "yaml": "^1.10.2"
+  }
+}

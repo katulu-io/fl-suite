@@ -1,0 +1,2 @@
+./tmp/fl_suite-$$container-tag$$-py3-none-any.whl
+flwr==0.18.0

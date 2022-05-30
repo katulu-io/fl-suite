@@ -1,0 +1,23 @@
+{
+  "name": "fl-suite",
+  "version": "0.0.0-dev",
+  "repository": "git@github.com:katulu-io/fl-suite.git",
+  "private": true,
+  "workspaces": [
+    "components/*",
+    ".release"
+  ],
+  "devDependencies": {
+    "@commitlint/cli": "^17.0.0",
+    "@commitlint/config-conventional": "^17.0.0",
+    "eslint": "^7.10.0",
+    "husky": "^8.0.1",
+    "prettier": "^2.2.1",
+    "typescript": "^4.0.3"
+  },
+  "husky": {
+    "hooks": {
+      "post-commit": "commitlint -e"
+    }
+  }
+}

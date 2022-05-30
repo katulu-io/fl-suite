@@ -1,0 +1,19 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: spire-server
+spec:
+  gateways:
+    - spire-server-gateway
+  hosts:
+    - spire.dev.fl.katulu.io
+  tls:
+    - match:
+        - port: 443
+          sniHosts:
+            - spire.dev.fl.katulu.io
+      route:
+        - destination:
+            host: spire-server
+            port:
+              number: 8081

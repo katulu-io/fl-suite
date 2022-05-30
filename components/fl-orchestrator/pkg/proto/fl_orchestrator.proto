@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+option go_package = "github.com/katulu-io/fl-suite/fl-orchestrator-proto/service/fl_orchestrator";
+
+message ServersRequest {}
+
+message ServerResponse {
+  string RunID = 1;
+  string WorkflowName = 2;
+  string ClientImage = 3;
+  string ServerSNI = 4;
+}
+
+message GetServersResponse {
+  repeated ServerResponse Servers = 1;
+}
+
+service FlOrchestrator {
+  rpc ListServers(ServersRequest) returns (stream ServerResponse) {}
+  rpc GetServers(ServersRequest) returns (GetServersResponse) {}
+}

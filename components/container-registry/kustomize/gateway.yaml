@@ -1,0 +1,28 @@
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: container-registry
+spec:
+  servers:
+  # This allow cert-manager's http01 challenge to complete by leaving
+  # the tls redirection open to any host
+  - hosts:
+      - "*"
+    port:
+      name: http
+      number: 80
+      protocol: HTTP
+    tls:
+      httpsRedirect: true
+
+  - hosts:
+      - "*"
+    port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    tls:
+      mode: SIMPLE
+      credentialName: letsencrypt-tls
+      minProtocolVersion: "TLSV1_2"

@@ -1,0 +1,3 @@
+[submodule "components/vendor/kubeflow"]
+	path = components/vendor/kubeflow
+	url = git@github.com:kubeflow/manifests.git

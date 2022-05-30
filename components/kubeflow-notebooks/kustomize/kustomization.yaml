@@ -1,0 +1,9 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: katulu-fl
+
+resources:
+  - allow-pipeline-access.yaml
+  - rolebinding.yaml
+  - serviceaccount.yaml

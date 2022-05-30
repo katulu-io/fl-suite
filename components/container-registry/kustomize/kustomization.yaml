@@ -1,0 +1,26 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: container-registry
+
+resources:
+  - namespace.yaml
+  - pvc.yaml
+  - deployment.yaml
+  - service.yaml
+  - virtualservice.yaml
+  - gateway.yaml
+
+configMapGenerator:
+  - name: container-registry-config
+    files:
+      - config/config.yml
+
+secretGenerator:
+  - name: container-registry-auth
+    files:
+      - config/registry.htpasswd
+
+generatorOptions:
+  disableNameSuffixHash: true
