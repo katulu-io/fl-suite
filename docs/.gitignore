@@ -1,0 +1,9 @@
+# App secrets
+kustomize/fl-studio/config/.dockerconfigjson
+kustomize/fl-studio/config/.dockerconfigjson
+kustomize/fl-studio/config/container-registry-params.env
+kustomize/fl-studio/config/fl-orchestrator-params.env
+kustomize/fl-studio/config/spire-agent.conf
+kustomize/fl-studio/config/spire-server-params.env
+kustomize/fl-edge/config/fl-operator-params.env
+kustomize/fl-edge/config/spire-server-creds.env
