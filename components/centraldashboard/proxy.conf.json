@@ -1,0 +1,8 @@
+[
+  {
+    "context": ["/login/oidc", "/jupyter"],
+    "target": "https://cluser.url.example.com",
+    "secure": false,
+    "logLevel": "info"
+  }
+]

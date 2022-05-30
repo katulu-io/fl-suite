@@ -1,0 +1,9 @@
+apiVersion: fl.katulu.io/v1alpha1
+kind: FlOperator
+metadata:
+  name: floperator-sample
+  namespace: katulu-fl
+spec:
+  orchestrator-url: localhost
+  orchestrator-port: 443
+  orchestrator-sni: fl-orchestrator.fl.katulu.io

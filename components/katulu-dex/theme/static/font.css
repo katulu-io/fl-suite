@@ -1,0 +1,35 @@
+@font-face {
+    font-family: brandon-text;
+    font-style: normal;
+    font-weight: 400;
+    src: url(fonts/Brandon-Text-Web-Regular.woff) format("woff"),
+        url(fonts/Brandon-Text-Web-Regular.woff2) format("woff2"),
+        url(fonts/Brandon-Text-Web-Regular.eot) format("embedded-opentype");
+}
+
+@font-face {
+    font-family: brandon-text;
+    font-style: normal;
+    font-weight: 600;
+    src: url(fonts/Brandon-Text-Web-Medium.woff) format("woff"),
+        url(fonts/Brandon-Text-Web-Medium.woff2) format("woff2"),
+        url(fonts/Brandon-Text-Web-Medium.eot) format("embedded-opentype");
+}
+
+@font-face {
+    font-family: brandon-text;
+    font-style: normal;
+    font-weight: 800;
+    src: url(fonts/Brandon-Text-Web-Bold.woff) format("woff"),
+        url(fonts/Brandon-Text-Web-Bold.woff2) format("woff2"),
+        url(fonts/Brandon-Text-Web-Bold.eot) format("embedded-opentype");
+}
+
+@font-face {
+    font-family: brandon-text;
+    font-style: italic;
+    font-weight: 400;
+    src: url(fonts/Brandon-Text-Web-Regular-Italic.woff) format("woff"),
+        url(fonts/Brandon-Text-Web-Regular-Italic.woff2) format("woff2"),
+        url(fonts/Brandon-Text-Web-Regular-Italic.eot) format("eot");
+}

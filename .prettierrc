@@ -1,0 +1,11 @@
+{
+  "printWidth": 120,
+  "overrides": [
+    {
+      "files": ["*.yaml", "*.yml"],
+      "options": {
+        "bracketSpacing": false
+      }
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: container-registry
+spec:
+  gateways:
+    - container-registry
+  hosts:
+    - "*"
+  http:
+    - match:
+        - uri:
+            prefix: /
+      rewrite:
+        uri: /
+      route:
+        - destination:
+            host: container-registry.container-registry.svc.cluster.local
+            port:
+              number: 5000

@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fl-orchestrator
+  labels:
+    app: fl-orchestrator
+    spire-workload: fl-orchestrator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fl-orchestrator
+      spire-workload: fl-orchestrator
+  template:
+    metadata:
+      labels:
+        app: fl-orchestrator
+        spire-workload: fl-orchestrator
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      containers:
+        - image: fl-orchestrator
+          name: fl-orchestrator
+          args:
+            - "-pipeline-api-url"
+            - "http://ml-pipeline.kubeflow.svc.cluster.local:8888"
+            - "-token-file"
+            - "$(KF_PIPELINES_SA_TOKEN_PATH)"
+            - "-pipeline-namespace"
+            - "$(KATULU_PIPELINES_NAMESPACE)"
+            - "-minio-endpoint"
+            - "minio-service.kubeflow.svc.cluster.local:9000"
+            - "-minio-credentials"
+            - "/var/run/secrets/minio/credentials"
+          volumeMounts:
+            - mountPath: /var/run/secrets/kubeflow/pipelines
+              name: volume-kf-pipeline-token
+            - name: minio-credentials
+              mountPath: /var/run/secrets/minio/
+              readOnly: true
+          env:
+            - name: KF_PIPELINES_SA_TOKEN_PATH
+              value: /var/run/secrets/kubeflow/pipelines/token
+            - name: KATULU_PIPELINES_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+        - name: envoy
+          image: envoyproxy/envoy:v1.20-latest
+          imagePullPolicy: Always
+          args: ["-l", "debug", "--local-address-ip-version", "v4", "-c", "/run/envoy/envoy.yaml", "--base-id", "1"]
+          ports:
+            - containerPort: 9001
+          volumeMounts:
+            - name: envoy-config
+              mountPath: "/run/envoy"
+              readOnly: true
+            - name: spire-agent-socket
+              mountPath: /run/spire/sockets
+              readOnly: true
+          env:
+            # TODO: Change to run as a non-root user
+            - name: ENVOY_UID
+      serviceAccountName: fl-orchestrator
+      volumes:
+        - name: volume-kf-pipeline-token
+          projected:
+            sources:
+              - serviceAccountToken:
+                  path: token
+                  expirationSeconds: 7200
+                  audience: pipelines.kubeflow.org
+        - name: envoy-config
+          configMap:
+            name: fl-orchestrator-envoyproxy
+        - name: spire-agent-socket
+          hostPath:
+            path: /run/spire/sockets
+            type: DirectoryOrCreate
+        - name: minio-credentials
+          secret:
+            secretName: minio-credentials
+            optional: false
