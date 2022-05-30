@@ -1,0 +1,4 @@
+## Append samples you want in your CSV to this file as resources ##
+resources:
+- fl_v1alpha1_floperator.yaml
+#+kubebuilder:scaffold:manifestskustomizesamples

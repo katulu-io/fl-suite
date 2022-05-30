@@ -1,0 +1,10 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: kubeflow
+resources:
+  - manifests/overlays/istio
+commonLabels:
+  app: centraldashboard
+  app.kubernetes.io/component: centraldashboard
+  app.kubernetes.io/name: centraldashboard
+  kustomize.component: centraldashboard

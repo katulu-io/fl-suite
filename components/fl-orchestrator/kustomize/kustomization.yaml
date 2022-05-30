@@ -1,0 +1,27 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: katulu-fl
+
+resources:
+  - service-account.yaml
+  - secret.yaml
+  - cluster-role-binding.yaml
+  - deployment.yaml
+  - service.yaml
+  - envoyproxy-service.yaml
+  - gateway.yaml
+  - virtualservice.yaml
+
+configMapGenerator:
+  - name: fl-orchestrator-envoyproxy
+    files:
+      - config/envoy.yaml
+
+secretGenerator:
+  - name: minio-credentials
+    files:
+      - credentials=config/minio-credentials
+
+generatorOptions:
+  disableNameSuffixHash: true

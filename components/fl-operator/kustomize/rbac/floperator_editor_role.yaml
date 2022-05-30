@@ -1,0 +1,24 @@
+# permissions for end users to edit floperators.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: floperator-editor-role
+rules:
+- apiGroups:
+  - fl.katulu.io
+  resources:
+  - floperators
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - fl.katulu.io
+  resources:
+  - floperators/status
+  verbs:
+  - get

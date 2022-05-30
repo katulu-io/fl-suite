@@ -1,0 +1,42 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: container-registry
+  labels:
+    app: container-registry
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: container-registry
+  template:
+    metadata:
+      labels:
+        app: container-registry
+    spec:
+      containers:
+        - name: registry
+          image: registry:2
+          ports:
+            - containerPort: 5000
+          volumeMounts:
+            - name: auth
+              mountPath: /etc/registry.htpasswd
+              subPath: registry.htpasswd
+              readOnly: true
+            - name: data
+              mountPath: /var/lib/registry
+            - name: config
+              mountPath: /etc/docker/registry
+              readOnly: true
+      volumes:
+        - name: auth
+          secret:
+            secretName: container-registry-auth
+        - name: data
+          persistentVolumeClaim:
+            claimName: container-registry-data
+        - name: config
+          configMap:
+            name: container-registry-config

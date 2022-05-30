@@ -1,0 +1,75 @@
+name: Main
+on:
+  push:
+    branches:
+      - main
+      - beta
+  pull_request:
+    branches:
+      - main
+      - beta
+  workflow_dispatch:
+
+env:
+  MAKEVAR_REGISTRY: ghcr.io/katulu-io/fl-suite
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+
+    permissions:
+      # The packages _write_ permission is needed to push/pull to/from GitHub's container regsitry.
+      packages: write
+      # Contents and pull-requests _write_ permissions are needed for semantic-release to update the respective items.
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Registry
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin;
+
+      - name: Dev-Container
+        run: make devcontainer
+
+      - name: Dependencies
+        run: make devcontainer-dependencies
+
+      - name: Env
+        run: |
+          make devcontainer-env
+          cat .env >> $GITHUB_ENV
+        if: github.event_name == 'push'
+
+      - name: Commit lint (PR)
+        run: make devcontainer-commitlint MAKEVAR_COMMITS_FROM="origin/${{github.base_ref}}"
+        if: github.event_name == 'pull_request'
+      - name: Commit lint (push)
+        run: make devcontainer-commitlint MAKEVAR_COMMITS_FROM="HEAD~1"
+        if: github.event_name == 'push'
+
+      - name: Lint
+        run: make devcontainer-lint
+
+      - name: Test
+        run: make devcontainer-test
+
+      - name: Build
+        run: make devcontainer-build
+
+      - name: Dist
+        run: make devcontainer-dist
+        if: github.event_name == 'push'
+
+      - name: Push
+        run: make push # Run `push` outside the devcontainer to avoid the need for additional authentication
+        if: github.event_name == 'push'
+
+      - name: Release
+        run: make devcontainer-release GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}"
+        if: github.event_name == 'push'
