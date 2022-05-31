@@ -78,20 +78,8 @@ func (w *Watcher) Run(ctx context.Context) {
 					continue
 				}
 
-				task := pb.OrchestratorMessage_TaskSpec{
-					ID:       runID,
-					Workflow: workflowManifest.Metadata.Name,
-					SNI:      serverSNI,
-					Executor: &pb.OrchestratorMessage_ExecutorSpec{
-						Executor: &pb.OrchestratorMessage_ExecutorSpec_OciExecutor{
-							OciExecutor: &pb.OrchestratorMessage_ExecutorSpec_OCIExecutorSpec{
-								Image: clientImage,
-							},
-						},
-					},
-					// ClientImage:  clientImage,
-				}
-				tasks = append(tasks, &task)
+				task := server.NewTaskSpec(runID, workflowManifest.Metadata.Name, serverSNI, clientImage)
+				tasks = append(tasks, task)
 			}
 
 			w.GrpcServer.SetTasks(tasks)
