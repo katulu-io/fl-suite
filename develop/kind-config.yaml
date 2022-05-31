@@ -1,0 +1,25 @@
+---
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: local.fl-suite
+containerdConfigPatches:
+  - |-
+    [plugins."io.containerd.grpc.v1.cri".registry.mirrors."localhost:5000"]
+      endpoint = ["http://registry:5000"]
+    [plugins."io.containerd.grpc.v1.cri".registry.mirrors."container-registry.container-registry:5000"]
+      endpoint = ["http://local.fl-suite-control-plane:30080"]
+nodes:
+  - role: control-plane
+    # Using kubernetes version 1.21 to avoid "no matches for kind "CustomResourceDefinition"" error (related issue: https://github.com/kubeflow/manifests/issues/2028)
+    image: kindest/node:v1.21.10@sha256:84709f09756ba4f863769bdcabe5edafc2ada72d3c8c44d6515fc581b66b029c
+    extraPortMappings:
+      - containerPort: 30080
+        hostPort: 80
+      - containerPort: 30443
+        hostPort: 443
+    # TODO: Remove this extra mount. The FLOperator pods expect a /dataset directory in the kubernetes node. To
+    # force-create one we let kind do it
+    extraMounts:
+      - hostPath: dataset/
+        containerPath: /dataset
+        readOnly: true
