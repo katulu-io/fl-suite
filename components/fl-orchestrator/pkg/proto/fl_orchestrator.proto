@@ -36,13 +36,7 @@ message OrchestratorMessage {
     ExecutorSpec executor = 4;
   }
 
-  message TasksSpec {
-    repeated TaskSpec tasks = 1;
-  }
-
-  oneof message {
-    TasksSpec tasks = 1;
-  }
+  repeated TaskSpec tasks = 1;
 }
 
 service FlOrchestrator {

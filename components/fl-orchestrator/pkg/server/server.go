@@ -10,14 +10,12 @@ import (
 type FlOrchestratorServer struct {
 	pb.UnimplementedFlOrchestratorServer
 
-	tasks *pb.OrchestratorMessage_TasksSpec
+	tasks []*pb.OrchestratorMessage_TaskSpec
 }
 
 func NewServer() *FlOrchestratorServer {
 	return &FlOrchestratorServer{
-		tasks: &pb.OrchestratorMessage_TasksSpec{
-			Tasks: make([]*pb.OrchestratorMessage_TaskSpec, 0),
-		},
+		tasks: make([]*pb.OrchestratorMessage_TaskSpec, 0),
 	}
 }
 
@@ -38,9 +36,7 @@ func NewTaskSpec(runID, workflow, sni, image string) *pb.OrchestratorMessage_Tas
 
 func (s *FlOrchestratorServer) Join(req *pb.OperatorMessage, stream pb.FlOrchestrator_JoinServer) error {
 	message := &pb.OrchestratorMessage{
-		Message: &pb.OrchestratorMessage_Tasks{
-			Tasks: s.tasks,
-		},
+		Tasks: s.tasks,
 	}
 
 	err := stream.Send(message)
@@ -53,12 +49,10 @@ func (s *FlOrchestratorServer) Join(req *pb.OperatorMessage, stream pb.FlOrchest
 
 func (s *FlOrchestratorServer) GetTasks(ctx context.Context, req *pb.OperatorMessage) (*pb.OrchestratorMessage, error) {
 	return &pb.OrchestratorMessage{
-		Message: &pb.OrchestratorMessage_Tasks{
-			Tasks: s.tasks,
-		},
+		Tasks: s.tasks,
 	}, nil
 }
 
 func (s *FlOrchestratorServer) SetTasks(tasks []*pb.OrchestratorMessage_TaskSpec) {
-	s.tasks.Tasks = tasks
+	s.tasks = tasks
 }
