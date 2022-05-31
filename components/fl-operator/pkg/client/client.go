@@ -24,18 +24,18 @@ func NewClient(conn *grpc.ClientConn, timeout time.Duration) Client {
 	}
 }
 
-func (c *Client) GetServers(parentCtx context.Context) (*pb.GetServersResponse, error) {
+func (c *Client) GetTasks(parentCtx context.Context) (*pb.OrchestratorMessage, error) {
 	ctx, cancel := context.WithTimeout(parentCtx, c.timeout)
 	defer cancel()
 
-	return c.client.GetServers(ctx, &pb.ServersRequest{})
+	return c.client.GetTasks(ctx, &pb.OperatorMessage{})
 }
 
-func (c *Client) GetListServersStream(parentCtx context.Context, serverAddress string, timeout time.Duration) (*pb.FlOrchestrator_ListServersClient, error) {
+func (c *Client) GetJoinStream(parentCtx context.Context, serverAddress string, timeout time.Duration) (*pb.FlOrchestrator_JoinClient, error) {
 	ctx, cancel := context.WithTimeout(parentCtx, c.timeout)
 	defer cancel()
 
-	stream, err := c.client.ListServers(ctx, &pb.ServersRequest{})
+	stream, err := c.client.Join(ctx, &pb.OperatorMessage{})
 	if err != nil {
 		return nil, err
 	}
@@ -43,19 +43,19 @@ func (c *Client) GetListServersStream(parentCtx context.Context, serverAddress s
 	return &stream, nil
 }
 
-func (c *Client) ListServers(parentCtx context.Context) ([]*pb.ServerResponse, error) {
+func (c *Client) Join(parentCtx context.Context) ([]*pb.OrchestratorMessage, error) {
 	ctx, cancel := context.WithTimeout(parentCtx, c.timeout)
 	defer cancel()
 
-	stream, err := c.client.ListServers(ctx, &pb.ServersRequest{})
+	stream, err := c.client.Join(ctx, &pb.OperatorMessage{})
 	if err != nil {
 		return nil, err
 	}
 
-	servers := make([]*pb.ServerResponse, 0)
+	tasks := make([]*pb.OrchestratorMessage, 0)
 
 	for {
-		server, err := stream.Recv()
+		task, err := stream.Recv()
 		if err == io.EOF {
 			break
 		}
@@ -64,8 +64,8 @@ func (c *Client) ListServers(parentCtx context.Context) ([]*pb.ServerResponse, e
 			continue
 		}
 
-		servers = append(servers, server)
+		tasks = append(tasks, task)
 	}
 
-	return servers, nil
+	return tasks, nil
 }

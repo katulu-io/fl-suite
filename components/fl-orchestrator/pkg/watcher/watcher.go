@@ -48,7 +48,7 @@ func (w *Watcher) Run(ctx context.Context) {
 				log.Println(err)
 			}
 
-			servers := make([]*pb.ServerResponse, 0)
+			tasks := make([]*pb.OrchestratorMessage_TaskSpec, 0)
 			for _, runID := range runIDs {
 				pipelineRun, err := w.Client.GetRun(pollCtx, runID, authToken)
 				if err != nil {
@@ -78,16 +78,23 @@ func (w *Watcher) Run(ctx context.Context) {
 					continue
 				}
 
-				server := pb.ServerResponse{
-					RunID:        runID,
-					WorkflowName: workflowManifest.Metadata.Name,
-					ClientImage:  clientImage,
-					ServerSNI:    serverSNI,
+				task := pb.OrchestratorMessage_TaskSpec{
+					ID:       runID,
+					Workflow: workflowManifest.Metadata.Name,
+					SNI:      serverSNI,
+					Executor: &pb.OrchestratorMessage_ExecutorSpec{
+						Executor: &pb.OrchestratorMessage_ExecutorSpec_OciExecutor{
+							OciExecutor: &pb.OrchestratorMessage_ExecutorSpec_OCIExecutorSpec{
+								Image: clientImage,
+							},
+						},
+					},
+					// ClientImage:  clientImage,
 				}
-				servers = append(servers, &server)
+				tasks = append(tasks, &task)
 			}
 
-			w.GrpcServer.SetServers(servers)
+			w.GrpcServer.SetTasks(tasks)
 		}()
 
 		select {

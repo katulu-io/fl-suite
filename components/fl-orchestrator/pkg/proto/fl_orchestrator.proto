@@ -2,20 +2,50 @@ syntax = "proto3";
 
 option go_package = "github.com/katulu-io/fl-suite/fl-orchestrator-proto/service/fl_orchestrator";
 
-message ServersRequest {}
+message OperatorMessage {}
 
-message ServerResponse {
-  string RunID = 1;
-  string WorkflowName = 2;
-  string ClientImage = 3;
-  string ServerSNI = 4;
-}
+message OrchestratorMessage {
+  message ExecutorSpec {
+    message  OCIExecutorSpec {
+      string image = 1;
+    }
 
-message GetServersResponse {
-  repeated ServerResponse Servers = 1;
+    message  CoreMLExecutorSpec {
+      string model = 1;
+    }
+
+    message  TensorflowJSExecutorSpec {
+      string model = 1;
+    }
+
+    oneof executor {
+      OCIExecutorSpec oci_executor = 1;
+      CoreMLExecutorSpec coreml_executor = 2;
+      TensorflowJSExecutorSpec tensorflowjs_executor = 3;
+    }
+  }
+
+  message TaskSpec {
+    // Unique task identifier derived from the pipeline run and task id.
+    string ID = 1;
+    // Name of the workflow
+    string Workflow = 2;
+    // Server name indication used to identify the aggreation server.
+    string SNI = 3;
+
+    ExecutorSpec executor = 4;
+  }
+
+  message TasksSpec {
+    repeated TaskSpec tasks = 1;
+  }
+
+  oneof message {
+    TasksSpec tasks = 1;
+  }
 }
 
 service FlOrchestrator {
-  rpc ListServers(ServersRequest) returns (stream ServerResponse) {}
-  rpc GetServers(ServersRequest) returns (GetServersResponse) {}
+  rpc Join(OperatorMessage) returns (stream OrchestratorMessage) {}
+  rpc GetTasks(OperatorMessage) returns (OrchestratorMessage) {}
 }

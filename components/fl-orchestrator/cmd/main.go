@@ -23,7 +23,7 @@ func main() {
 	pipelineAPIURL := flag.String("pipeline-api-url", "http://localhost:8080", "URL of the pipeline API")
 	tokenFile := flag.String("token-file", "", "Path to the file containing an authorization token for the pipeline API")
 	pipelineNamespace := flag.String("pipeline-namespace", "", "Namespace to query for runs in the pipeline API")
-	minioEndpoint := flag.String("minio-endpoint", "http://localhost:9000", "URL of the pipeline API")
+	minioEndpoint := flag.String("minio-endpoint", "localhost:9000", "URL of the pipeline API")
 	minioCredentials := flag.String("minio-credentials", "/tmp/credentials", "URL of the pipeline API")
 	pollIntervalFlag := flag.String("interval", "2s", "Poll interval")
 	listenAddr := flag.String("addr", ":9090", "HTTP server address to listen")
