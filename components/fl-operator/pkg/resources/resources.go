@@ -51,10 +51,10 @@ func RenderEnvoyproxyConfig(context EnvoyConfigContext, envoyConfigFile string) 
 }
 
 // Creates a new flower-client deployment that contains the envoy-proxy plus the fl-client itself
-func NewDeployment(server *pb.ServerResponse, name types.NamespacedName, envoyConfigName string) *appsv1.Deployment {
+func NewDeployment(task *pb.OrchestratorMessage_TaskSpec, name types.NamespacedName, envoyConfigName string) *appsv1.Deployment {
 	labels := map[string]string{
 		FlClientDeploymentLabelKey: FlClientDeploymentLabelValue,
-		"run-id":                   string(server.RunID),
+		"run-id":                   string(task.ID),
 	}
 
 	envoyConfigVolumeKey := "envoy-config"
@@ -77,7 +77,7 @@ func NewDeployment(server *pb.ServerResponse, name types.NamespacedName, envoyCo
 					Containers: []corev1.Container{
 						{
 							Name:            "flower-client",
-							Image:           server.ClientImage,
+							Image:           task.Executor.GetOciExecutor().Image,
 							Args:            []string{"/dataset", "0", "localhost:9080"},
 							ImagePullPolicy: corev1.PullIfNotPresent,
 							VolumeMounts: []corev1.VolumeMount{

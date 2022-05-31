@@ -18,34 +18,35 @@ import (
 type mockOrchestratorServer struct {
 	pb.UnimplementedFlOrchestratorServer
 
-	servers []*pb.ServerResponse
+	tasks []*pb.OrchestratorMessage_TaskSpec
 }
 
-func (m *mockOrchestratorServer) ListServers(req *pb.ServersRequest, stream pb.FlOrchestrator_ListServersServer) error {
-	for _, server := range m.servers {
-		err := stream.Send(server)
+func (m *mockOrchestratorServer) Join(req *pb.OperatorMessage, stream pb.FlOrchestrator_JoinServer) error {
+	message := &pb.OrchestratorMessage{
+		Tasks: m.tasks,
+	}
 
-		if err != nil {
-			return err
-		}
+	err := stream.Send(message)
+	if err != nil {
+		return err
 	}
 
 	return nil
 }
 
-func (m *mockOrchestratorServer) GetServers(ctx context.Context, req *pb.ServersRequest) (*pb.GetServersResponse, error) {
-	return &pb.GetServersResponse{
-		Servers: m.servers,
+func (m *mockOrchestratorServer) GetTasks(ctx context.Context, req *pb.OperatorMessage) (*pb.OrchestratorMessage, error) {
+	return &pb.OrchestratorMessage{
+		Tasks: m.tasks,
 	}, nil
 }
 
-func dialer(servers []*pb.ServerResponse) func(context.Context, string) (net.Conn, error) {
+func dialer(tasks []*pb.OrchestratorMessage_TaskSpec) func(context.Context, string) (net.Conn, error) {
 	listener := bufconn.Listen(1024 * 1024)
 
 	server := grpc.NewServer()
 
 	pb.RegisterFlOrchestratorServer(server, &mockOrchestratorServer{
-		servers: servers,
+		tasks: tasks,
 	})
 
 	go func() {
@@ -60,10 +61,10 @@ func dialer(servers []*pb.ServerResponse) func(context.Context, string) (net.Con
 }
 
 var _ = Describe("Client", func() {
-	Describe("GetServers", func() {
-		It("should return an empty array of servers", func() {
+	Describe("GetTasks", func() {
+		It("should return an empty array of tasks", func() {
 			ctx := context.Background()
-			emptyResponse := make([]*pb.ServerResponse, 0)
+			emptyResponse := make([]*pb.OrchestratorMessage_TaskSpec, 0)
 			conn, err := grpc.DialContext(ctx, "", grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithContextDialer(dialer(emptyResponse)))
 			Expect(err).ToNot(HaveOccurred())
 			defer conn.Close()
@@ -72,26 +73,38 @@ var _ = Describe("Client", func() {
 
 			cl := client.NewClient(conn, timeout)
 
-			response, err := cl.GetServers(context.Background())
+			response, err := cl.GetTasks(context.Background())
 
 			Expect(err).ToNot(HaveOccurred())
-			Expect(len(response.Servers)).To(Equal(0))
+			Expect(len(response.GetTasks())).To(Equal(0))
 		})
 
-		It("should return a non-empty map of servers", func() {
+		It("should return a non-empty array of tasks", func() {
 			ctx := context.Background()
-			nonEmptyResponse := []*pb.ServerResponse{
+			nonEmptyResponse := []*pb.OrchestratorMessage_TaskSpec{
 				{
-					RunID:        "test-run-id-1",
-					WorkflowName: "test-workflow-1",
-					ClientImage:  "test/image-1:0.1",
-					ServerSNI:    "test.server-1.io",
+					ID:       "test-run-id-1",
+					SNI:      "test.server-1.io",
+					Workflow: "test-workflow-1",
+					Executor: &pb.OrchestratorMessage_ExecutorSpec{
+						Executor: &pb.OrchestratorMessage_ExecutorSpec_OciExecutor{
+							OciExecutor: &pb.OrchestratorMessage_ExecutorSpec_OCIExecutorSpec{
+								Image: "test/image-1:0.1",
+							},
+						},
+					},
 				},
 				{
-					RunID:        "test-run-id-2",
-					WorkflowName: "test-workflow-2",
-					ClientImage:  "test/image-2:0.1",
-					ServerSNI:    "test.server-2.io",
+					ID:       "test-run-id-2",
+					SNI:      "test.server-2.io",
+					Workflow: "test-workflow-2",
+					Executor: &pb.OrchestratorMessage_ExecutorSpec{
+						Executor: &pb.OrchestratorMessage_ExecutorSpec_OciExecutor{
+							OciExecutor: &pb.OrchestratorMessage_ExecutorSpec_OCIExecutorSpec{
+								Image: "test/image-2:0.1",
+							},
+						},
+					},
 				},
 			}
 			conn, err := grpc.DialContext(ctx, "", grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithContextDialer(dialer(nonEmptyResponse)))
@@ -102,18 +115,21 @@ var _ = Describe("Client", func() {
 
 			cl := client.NewClient(conn, timeout)
 
-			response, err := cl.GetServers(context.Background())
+			response, err := cl.GetTasks(context.Background())
 
 			Expect(err).ToNot(HaveOccurred())
-			Expect(len(response.Servers)).To(Equal(2))
-			Expect(response.Servers[0].RunID).To(Equal("test-run-id-1"))
-			Expect(response.Servers[0].WorkflowName).To(Equal("test-workflow-1"))
-			Expect(response.Servers[0].ClientImage).To(Equal("test/image-1:0.1"))
-			Expect(response.Servers[0].ServerSNI).To(Equal("test.server-1.io"))
-			Expect(response.Servers[1].RunID).To(Equal("test-run-id-2"))
-			Expect(response.Servers[1].WorkflowName).To(Equal("test-workflow-2"))
-			Expect(response.Servers[1].ClientImage).To(Equal("test/image-2:0.1"))
-			Expect(response.Servers[1].ServerSNI).To(Equal("test.server-2.io"))
+
+			tasks := response.GetTasks()
+
+			Expect(len(tasks)).To(Equal(2))
+			Expect(tasks[0].ID).To(Equal("test-run-id-1"))
+			Expect(tasks[0].SNI).To(Equal("test.server-1.io"))
+			Expect(tasks[0].Workflow).To(Equal("test-workflow-1"))
+			Expect(tasks[0].Executor.GetOciExecutor().Image).To(Equal("test/image-1:0.1"))
+			Expect(tasks[1].ID).To(Equal("test-run-id-2"))
+			Expect(tasks[1].SNI).To(Equal("test.server-2.io"))
+			Expect(tasks[1].Workflow).To(Equal("test-workflow-2"))
+			Expect(tasks[1].Executor.GetOciExecutor().Image).To(Equal("test/image-2:0.1"))
 		})
 	})
 })

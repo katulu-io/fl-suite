@@ -120,15 +120,17 @@ func (r *FlOperatorReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		r.OrchestratorClient = &cl
 	}
 
-	resp, err := r.OrchestratorClient.GetServers(ctx)
+	resp, err := r.OrchestratorClient.GetTasks(ctx)
 	if err != nil {
-		l.Error(err, "Could not fetch servers")
+		l.Error(err, "Could not fetch tasks")
 		return ctrl.Result{
 			Requeue: true,
 		}, err
 	}
 
-	l.Info(fmt.Sprintf("Found %d servers", len(resp.Servers)))
+	tasks := resp.GetTasks()
+
+	l.Info(fmt.Sprintf("Found %d tasks", len(tasks)))
 
 	// First get the list of all running fl-client deployments
 	deploymentsList := &appsv1.DeploymentList{}
@@ -148,8 +150,8 @@ func (r *FlOperatorReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	for _, deployment := range deploymentsList.Items {
 		serverRunning := false
 
-		for _, server := range resp.Servers {
-			serverName := getDeploymentName(server)
+		for _, task := range tasks {
+			serverName := getDeploymentName(task)
 
 			if serverName == deployment.Name {
 				serverRunning = true
@@ -178,11 +180,11 @@ func (r *FlOperatorReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		}
 	}
 
-	for _, server := range resp.Servers {
-		l.Info(fmt.Sprintf("Found run ID: %s", server.RunID))
+	for _, task := range tasks {
+		l.Info(fmt.Sprintf("Found run ID: %s", task.ID))
 
 		deploymentName := types.NamespacedName{
-			Name:      getDeploymentName(server),
+			Name:      getDeploymentName(task),
 			Namespace: req.Namespace,
 		}
 
@@ -200,12 +202,12 @@ func (r *FlOperatorReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		envoyConfigContext := resources.EnvoyConfigContext{
 			EndpointAddress: flOperator.Spec.FlOrchestratorURL,
 			EndpointPort:    flOperator.Spec.FlOrchestratorPort,
-			EndpointSNI:     server.ServerSNI,
+			EndpointSNI:     task.SNI,
 			SourceName:      "flower-client",
-			DestinationName: server.WorkflowName,
+			DestinationName: task.Workflow,
 		}
 		configMapName := types.NamespacedName{
-			Name:      server.WorkflowName,
+			Name:      task.Workflow,
 			Namespace: req.Namespace,
 		}
 		err = r.setupEnvoyproxyConfig(ctx, flOperator, configMapName, envoyConfigContext)
@@ -214,7 +216,7 @@ func (r *FlOperatorReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 			continue
 		}
 
-		dep := resources.NewDeployment(server, deploymentName, server.WorkflowName)
+		dep := resources.NewDeployment(task, deploymentName, task.Workflow)
 
 		err = ctrl.SetControllerReference(flOperator, dep, r.Scheme)
 		if err != nil {
@@ -346,6 +348,6 @@ func (r *FlOperatorReconciler) isResourceFound(ctx context.Context, namespacedNa
 	return true, nil
 }
 
-func getDeploymentName(server *pb.ServerResponse) string {
-	return fmt.Sprintf("%s-%s", deploymentNameFlClient, server.WorkflowName)
+func getDeploymentName(task *pb.OrchestratorMessage_TaskSpec) string {
+	return fmt.Sprintf("%s-%s", deploymentNameFlClient, task.Workflow)
 }
