@@ -52,10 +52,10 @@ func (c *Client) Join(parentCtx context.Context) ([]*pb.OrchestratorMessage, err
 		return nil, err
 	}
 
-	tasks := make([]*pb.OrchestratorMessage, 0)
+	messages := make([]*pb.OrchestratorMessage, 0)
 
 	for {
-		task, err := stream.Recv()
+		message, err := stream.Recv()
 		if err == io.EOF {
 			break
 		}
@@ -64,8 +64,8 @@ func (c *Client) Join(parentCtx context.Context) ([]*pb.OrchestratorMessage, err
 			continue
 		}
 
-		tasks = append(tasks, task)
+		messages = append(messages, message)
 	}
 
-	return tasks, nil
+	return messages, nil
 }

@@ -23,11 +23,7 @@ type mockOrchestratorServer struct {
 
 func (m *mockOrchestratorServer) Join(req *pb.OperatorMessage, stream pb.FlOrchestrator_JoinServer) error {
 	message := &pb.OrchestratorMessage{
-		Message: &pb.OrchestratorMessage_Tasks{
-			Tasks: &pb.OrchestratorMessage_TasksSpec{
-				Tasks: m.tasks,
-			},
-		},
+		Tasks: m.tasks,
 	}
 
 	err := stream.Send(message)
@@ -40,11 +36,7 @@ func (m *mockOrchestratorServer) Join(req *pb.OperatorMessage, stream pb.FlOrche
 
 func (m *mockOrchestratorServer) GetTasks(ctx context.Context, req *pb.OperatorMessage) (*pb.OrchestratorMessage, error) {
 	return &pb.OrchestratorMessage{
-		Message: &pb.OrchestratorMessage_Tasks{
-			Tasks: &pb.OrchestratorMessage_TasksSpec{
-				Tasks: m.tasks,
-			},
-		},
+		Tasks: m.tasks,
 	}, nil
 }
 
@@ -84,7 +76,7 @@ var _ = Describe("Client", func() {
 			response, err := cl.GetTasks(context.Background())
 
 			Expect(err).ToNot(HaveOccurred())
-			Expect(len(response.GetTasks().Tasks)).To(Equal(0))
+			Expect(len(response.GetTasks())).To(Equal(0))
 		})
 
 		It("should return a non-empty array of tasks", func() {
@@ -126,7 +118,9 @@ var _ = Describe("Client", func() {
 			response, err := cl.GetTasks(context.Background())
 
 			Expect(err).ToNot(HaveOccurred())
-			tasks := response.GetTasks().Tasks
+
+			tasks := response.GetTasks()
+
 			Expect(len(tasks)).To(Equal(2))
 			Expect(tasks[0].ID).To(Equal("test-run-id-1"))
 			Expect(tasks[0].SNI).To(Equal("test.server-1.io"))

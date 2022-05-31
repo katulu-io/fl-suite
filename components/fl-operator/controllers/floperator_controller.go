@@ -128,7 +128,7 @@ func (r *FlOperatorReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		}, err
 	}
 
-	tasks := resp.GetTasks().Tasks
+	tasks := resp.GetTasks()
 
 	l.Info(fmt.Sprintf("Found %d tasks", len(tasks)))
 
