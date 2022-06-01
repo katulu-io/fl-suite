@@ -1,0 +1,100 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../release-manifests/fl-edge/kustomize/fl-edge/base/
+
+replacements:
+  - source:
+      kind: ConfigMap
+      name: fl-operator-params
+      namespace: katulu-fl
+      fieldPath:
+        data.fl_orchestrator_sni
+    targets:
+      - select:
+          name: floperator-sample
+          namespace: katulu-fl
+          kind: FlOperator
+        fieldPaths:
+          - spec.orchestrator-url
+          - spec.orchestrator-sni
+  - source:
+      kind: ConfigMap
+      name: fl-operator-params
+      namespace: katulu-fl
+      fieldPath:
+        data.fl_orchestrator_port
+    targets:
+      - select:
+          name: floperator-sample
+          namespace: katulu-fl
+          kind: FlOperator
+        fieldPaths:
+          - spec.orchestrator-port
+        options:
+          create: true
+
+patches:
+  - patch: |-
+      - op: add
+        path: /spec/template/spec/imagePullSecrets
+        value:
+          - name: regcred
+    target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: fl-operator-controller-manager
+      namespace: fl-operator-system
+  - patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/env
+        value:
+          - name: SPIRE_AGENT_JOIN_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: spire-server-creds
+                key: spire_agent_join_token
+          - name: SPIRE_AGENT_SERVER_ADDRESS
+            valueFrom:
+              secretKeyRef:
+                name: spire-server-creds
+                key: spire_agent_server_address
+      - op: remove
+        path: /spec/template/spec/initContainers
+    target:
+      group: apps
+      version: v1
+      kind: DaemonSet
+      name: spire-agent
+      namespace: spire
+
+configMapGenerator:
+  - name: fl-operator-params
+    namespace: katulu-fl
+    envs:
+      - config/fl-operator-params.env
+
+  - name: spire-agent
+    namespace: spire
+    behavior: replace
+    files:
+      - config/agent.conf
+
+secretGenerator:
+  - name: regcred
+    namespace: katulu-fl
+    type: kubernetes.io/dockerconfigjson
+    files:
+      - .dockerconfigjson=config/internal-registry-credentials.json
+
+  - name: spire-server-creds
+    namespace: spire
+    type: Opaque
+    envs:
+      - config/spire-server-creds.env
+
+generatorOptions:
+  disableNameSuffixHash: true

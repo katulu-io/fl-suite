@@ -1,0 +1,111 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../release-manifests/fl-suite/kustomize/fl-suite/overlays/standalone/
+
+replacements:
+  - source:
+      kind: ConfigMap
+      name: spire-server-params
+      namespace: spire
+      fieldPath:
+        data.spire_server_sni
+    targets:
+      - select:
+          name: spire-server-gateway
+          namespace: spire
+          kind: Gateway
+        fieldPaths:
+          - spec.servers.0.hosts.0
+      - select:
+          name: spire-server
+          namespace: spire
+          kind: VirtualService
+        fieldPaths:
+          - spec.hosts.0
+          - spec.tls.0.match.0.sniHosts.0
+
+  - source:
+      kind: ConfigMap
+      name: fl-orchestrator-params
+      namespace: katulu-fl
+      fieldPath:
+        data.fl_orchestrator_sni
+    targets:
+      - select:
+          name: fl-orchestrator-envoyproxy
+          namespace: katulu-fl
+          kind: Gateway
+        fieldPaths:
+          - spec.servers.0.hosts.0
+      - select:
+          name: fl-orchestrator-envoyproxy
+          namespace: katulu-fl
+          kind: VirtualService
+        fieldPaths:
+          - spec.hosts.0
+          - spec.tls.0.match.0.sniHosts.0
+
+  - source:
+      kind: ConfigMap
+      name: container-registry-params
+      namespace: container-registry
+      fieldPath:
+        data.container_registry_fqdn
+    targets:
+      - select:
+          name: container-registry
+          namespace: container-registry
+          kind: Gateway
+        fieldPaths:
+          - spec.servers.0.hosts.0
+      - select:
+          name: container-registry
+          namespace: container-registry
+          kind: VirtualService
+        fieldPaths:
+          - spec.hosts.0
+      - select:
+          name: remove-kubeflow-authz
+          namespace: istio-system
+          kind: EnvoyFilter
+        fieldPaths:
+          - spec.configPatches.0.match.routeConfiguration.vhost.name
+        options:
+          index: 0
+          delimiter: ":"
+
+secretGenerator:
+  - name: internal-registry-credentials
+    namespace: katulu-fl
+    type: kubernetes.io/dockerconfigjson
+    files:
+      - .dockerconfigjson=config/internal-registry-credentials.json
+
+configMapGenerator:
+  - name: spire-server-params
+    namespace: spire
+    envs:
+      - config/spire-server-params.env
+
+  - name: fl-orchestrator-params
+    namespace: katulu-fl
+    envs:
+      - config/fl-orchestrator-params.env
+
+  - name: container-registry-params
+    namespace: container-registry
+    envs:
+      - config/container-registry-params.env
+
+  # Kind does not have a cert in the cluster CA bundle that can authenticate the kubelet cert so we skip the kubelet verification
+  - name: spire-agent
+    namespace: spire
+    behavior: replace
+    files:
+      - agent.conf=config/spire-agent.conf
+
+generatorOptions:
+  disableNameSuffixHash: true

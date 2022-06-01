@@ -1,0 +1,17 @@
+# App secrets
+/example/fl-suite/config/.dockerconfigjson
+/example/fl-suite/config/container-registry-params.env
+/example/fl-suite/config/internal-registry-credentials.json
+/example/fl-suite/config/fl-orchestrator-params.env
+/example/fl-suite/config/spire-agent.conf
+/example/fl-suite/config/spire-server-params.env
+
+/example/fl-edge/config/fl-operator-params.env
+/example/fl-edge/config/spire-server-creds.env
+/example/fl-edge/config/internal-registry-credentials.json
+
+# Kubeconfig
+/local-edge-kubeconfig.yaml
+
+# Downloaded manifests
+/release-manifests
