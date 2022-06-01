@@ -6,4 +6,4 @@ metadata:
 spec:
   owner:
     kind: User
-    name: admin@katulu.io
+    name: user@example.com
