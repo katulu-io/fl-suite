@@ -14,7 +14,7 @@ from kfp.v2.dsl import ContainerOp
 from kubernetes import client as k8s_client
 
 from .._version import __version__
-from ._contants import INTERNAL_REGISTRY_SECRET, REGISTRY_SECRET
+from ._contants import INTERNAL_REGISTRY_SECRET
 
 
 def build_image(
@@ -65,18 +65,6 @@ def build_image(
     )
     build_image_op.add_volume_mount(
         k8s_client.V1VolumeMount(name="docker-config", mount_path="/.docker")
-    )
-    build_image_op.add_volume(
-        k8s_client.V1Volume(
-            name="upstream-docker-config",
-            secret=k8s_client.V1SecretVolumeSource(
-                secret_name=REGISTRY_SECRET,
-                items=[k8s_client.V1KeyToPath(key=".dockerconfigjson", path="config.json")],
-            ),
-        ),
-    )
-    build_image_op.add_volume_mount(
-        k8s_client.V1VolumeMount(name="upstream-docker-config", mount_path="/.upstream-docker")
     )
     build_image_op.container.add_resource_limit("smarter-devices/fuse", "1")
     build_image_op.container.add_resource_request("smarter-devices/fuse", "1")
