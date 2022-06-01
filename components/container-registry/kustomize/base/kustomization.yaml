@@ -9,8 +9,6 @@ resources:
   - pvc.yaml
   - deployment.yaml
   - service.yaml
-  - virtualservice.yaml
-  - gateway.yaml
 
 configMapGenerator:
   - name: container-registry-config
@@ -20,6 +18,7 @@ configMapGenerator:
 secretGenerator:
   - name: container-registry-auth
     files:
+      # username: registry, password: registry
       - config/registry.htpasswd
 
 generatorOptions:

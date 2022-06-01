@@ -38,7 +38,7 @@ resources:
   - ../../../components/kubeflow-profile/kustomize
 
   # Container registry
-  - ../../../components/container-registry/kustomize
+  - ../../../components/container-registry/kustomize/overlays/kubeflow
 
   # Spire
   - ../../../components/spire/kustomize/spire-namespace
