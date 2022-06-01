@@ -4,11 +4,9 @@ from typing import Callable, Optional
 from kfp import Client, dsl
 from kfp.compiler import Compiler
 from kfp.dsl import ContainerOp, ExitHandler
-from kubernetes import client as k8s_client
 
 from .._version import __version__
 from ._build_image import build_image, static_image
-from ._contants import REGISTRY_SECRET
 from ._flower_infrastructure import cleanup_kubernetes_resources, setup_kubernetes_resources
 from ._flower_server import FLParameters, flwr_server
 from ._prepare_context import download_build_context
@@ -41,10 +39,6 @@ def _pipeline(
         min_fit_clients: int,
         min_eval_clients: int,
     ) -> None:
-        dsl.get_pipeline_conf().set_image_pull_secrets(
-            [k8s_client.V1ObjectReference(name=REGISTRY_SECRET)]
-        )
-
         with ExitHandler(cleanup_kubernetes_resources()):
             if fl_client is not None:
                 prepare_context_op = fl_client()

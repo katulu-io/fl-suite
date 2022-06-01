@@ -13,8 +13,7 @@ VERIFY_TLS="${4,}"
 REGISTRY=$(jq -r '.auths | keys[0]' /.docker/config.json | sed -e 's/https:\/\///')
 IMAGE_URL="${REGISTRY}/${IMAGE_TAG}"
 
-# TODO: remove 'upstream-docker' auth once our upstream images are public
-buildah bud --authfile /.upstream-docker/config.json --tag "$IMAGE_URL" --file Dockerfile "${BUILD_CONTEXT_PATH}"
+buildah bud --tag "$IMAGE_URL" --file Dockerfile "${BUILD_CONTEXT_PATH}"
 
 buildah push --authfile /.docker/config.json --tls-verify="$VERIFY_TLS" "$IMAGE_URL"
 
