@@ -1,7 +1,7 @@
 import argparse
+import io
 import json
 import os
-import re
 from pathlib import Path
 
 import flwr
@@ -50,7 +50,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--output-path",
         type=str,
-        help="Path to the folder where the model weights and metrics of each training round will be written",
+        help="Path to the folder where the model weights of each training round will be written",
     )
     parser.add_argument(
         "--metadata-output-path",
@@ -98,8 +98,9 @@ if __name__ == "__main__":
         data,
         columns=["run", "client_id", "accuracy", "precision", "recall", "num_examples"],
     )
-    df_file = os.path.join(args.output_path, "metrics.csv")
-    df.to_csv(df_file, header=False, index=False)
+
+    metrics_csv = io.BytesIO()
+    df.to_csv(metrics_csv, header=False, index=False)
 
     # Write Kubeflow pipeline metadata
     metadata = {
@@ -116,19 +117,13 @@ if __name__ == "__main__":
                     "recall",
                     "num_examples",
                 ],
-                # Assume minio storage.
-                # In that case the internal path has to be adapted to a minio URL
-                "source": str.replace(df_file, "/minio/", "minio://"),
+                "storage": "inline",
+                "source": metrics_csv.getvalue().decode("utf-8"),
             },
         ],
     }
 
     for cid, confusion_matrix in strategy.confusion_matrices[-1].items():
-        # Remove invalid chars from 'cid'
-        cid_filename = re.sub(r'[^\w\-\_\. ]', '_', cid)
-
-        df_file = os.path.join(args.output_path, f"confusion-{cid_filename}.csv")
-
         # Convert to format expected by Kubeflow
         cm_data = []
         for i, col in enumerate(confusion_matrix.iteritems()):
@@ -137,8 +132,10 @@ if __name__ == "__main__":
                     break
                 cm_data.append((col[0], row[0], row[1]))
 
-        df_cm = pd.DataFrame(cm_data, columns=['target', 'predicted', 'count'])
-        df_cm.to_csv(df_file, header=False, index=False)
+        df_cm = pd.DataFrame(cm_data, columns=["target", "predicted", "count"])
+
+        confusion_csv = io.BytesIO()
+        df_cm.to_csv(confusion_csv, header=False, index=False)
 
         metadata["outputs"].append(
             {
@@ -150,7 +147,8 @@ if __name__ == "__main__":
                     {"name": "count", "type": "NUMBER"},
                 ],
                 "labels": confusion_matrix.columns.tolist(),
-                "source": str.replace(df_file, "/minio/", "minio://"),
+                "storage": "inline",
+                "source": confusion_csv.getvalue().decode("utf-8"),
             }
         )
 
