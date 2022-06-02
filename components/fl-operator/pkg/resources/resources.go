@@ -55,6 +55,7 @@ func NewDeployment(task *pb.OrchestratorMessage_TaskSpec, name types.NamespacedN
 	labels := map[string]string{
 		FlClientDeploymentLabelKey: FlClientDeploymentLabelValue,
 		"run-id":                   string(task.ID),
+		"spire-workload":           "flower-client",
 	}
 
 	envoyConfigVolumeKey := "envoy-config"
@@ -63,6 +64,7 @@ func NewDeployment(task *pb.OrchestratorMessage_TaskSpec, name types.NamespacedN
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name.Name,
 			Namespace: name.Namespace,
+			Labels:    labels,
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: utils.Int32Ptr(1),
@@ -158,7 +160,8 @@ func NewDeployment(task *pb.OrchestratorMessage_TaskSpec, name types.NamespacedN
 // Creates a new envoy proxy deployment
 func NewEnvoyproxyDeployment(name types.NamespacedName) *appsv1.Deployment {
 	labels := map[string]string{
-		"app": name.Name,
+		"app":            name.Name,
+		"spire-workload": "fl-operator",
 	}
 
 	const envoyConfigVolumeKey = "envoy-config"
@@ -167,6 +170,7 @@ func NewEnvoyproxyDeployment(name types.NamespacedName) *appsv1.Deployment {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name.Name,
 			Namespace: name.Namespace,
+			Labels:    labels,
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: utils.Int32Ptr(1),
@@ -244,7 +248,7 @@ func NewEnvoyproxyService(name types.NamespacedName) *corev1.Service {
 		Spec: corev1.ServiceSpec{
 			Ports: []corev1.ServicePort{
 				{
-					Name:     "http",
+					Name:     "grpc",
 					Port:     9080,
 					Protocol: "TCP",
 				},
