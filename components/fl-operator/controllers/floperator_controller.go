@@ -50,7 +50,7 @@ const (
 	configMapNameEnvoyProxy  = "fl-operator-envoyproxy"
 	deploymentNameEnvoyProxy = "fl-operator-envoyproxy"
 	serviceNameEnvoyProxy    = "fl-operator-envoyproxy"
-	deploymentNameFlClient   = "flower-client"
+	podNameFlClient          = "flower-client"
 )
 
 //+kubebuilder:rbac:groups=fl.katulu.io,resources=floperators,verbs=get;list;watch;create;update;patch;delete
@@ -133,12 +133,12 @@ func (r *FlOperatorReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	l.Info(fmt.Sprintf("Found %d tasks", len(tasks)))
 
 	// First get the list of all running fl-client deployments
-	deploymentsList := &appsv1.DeploymentList{}
+	podsList := &corev1.PodList{}
 	opts := []client.ListOption{
 		client.InNamespace(req.NamespacedName.Namespace),
 		client.MatchingLabels{resources.FlClientDeploymentLabelKey: resources.FlClientDeploymentLabelValue},
 	}
-	err = r.List(ctx, deploymentsList, opts...)
+	err = r.List(ctx, podsList, opts...)
 	if err != nil {
 		l.Error(err, "Could not get the list of fl-client deployments")
 		return ctrl.Result{
@@ -147,34 +147,32 @@ func (r *FlOperatorReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	}
 
 	// Then cleanup the running clients that don't have matching server anymore
-	for _, deployment := range deploymentsList.Items {
+	for _, pod := range podsList.Items {
 		serverRunning := false
 
 		for _, task := range tasks {
-			serverName := getDeploymentName(task)
-
-			if serverName == deployment.Name {
+			if pod.Name == getPodName(task) {
 				serverRunning = true
 				continue
 			}
 		}
 
 		if !serverRunning {
-			deprecatedDeployment := &appsv1.Deployment{}
-			deploymentName := types.NamespacedName{
-				Name:      deployment.Name,
-				Namespace: deployment.Namespace,
+			deprecatedPod := &corev1.Pod{}
+			podName := types.NamespacedName{
+				Name:      pod.Name,
+				Namespace: pod.Namespace,
 			}
 
-			err := r.Get(ctx, deploymentName, deprecatedDeployment)
+			err := r.Get(ctx, podName, deprecatedPod)
 			if err != nil {
-				l.Error(err, "Couldn't get deployment resource")
+				l.Error(err, "Couldn't get pod resource")
 				continue
 			}
 
-			err = r.Delete(ctx, deprecatedDeployment)
+			err = r.Delete(ctx, deprecatedPod)
 			if err != nil {
-				l.Error(err, "Couldn't delete deployment resource")
+				l.Error(err, "Couldn't delete pod resource")
 				continue
 			}
 		}
@@ -183,12 +181,12 @@ func (r *FlOperatorReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	for _, task := range tasks {
 		l.Info(fmt.Sprintf("Found run ID: %s", task.ID))
 
-		deploymentName := types.NamespacedName{
-			Name:      getDeploymentName(task),
+		podName := types.NamespacedName{
+			Name:      getPodName(task),
 			Namespace: req.Namespace,
 		}
 
-		found, err := r.isResourceFound(ctx, deploymentName, &appsv1.Deployment{})
+		found, err := r.isResourceFound(ctx, podName, &appsv1.Deployment{})
 		if err != nil {
 			l.Error(err, "Failed to find out if fl-client is running")
 			continue
@@ -216,17 +214,17 @@ func (r *FlOperatorReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 			continue
 		}
 
-		dep := resources.NewDeployment(task, deploymentName, task.Workflow)
+		pod := resources.NewPod(task, podName, task.Workflow)
 
-		err = ctrl.SetControllerReference(flOperator, dep, r.Scheme)
+		err = ctrl.SetControllerReference(flOperator, pod, r.Scheme)
 		if err != nil {
-			l.Error(err, "Failed to set controller reference for the deployment")
+			l.Error(err, "Failed to set controller reference for the pod")
 			continue
 		}
 
-		err = r.Create(ctx, dep)
+		err = r.Create(ctx, pod)
 		if err != nil {
-			l.Error(err, "Failed to create the deployment")
+			l.Error(err, "Failed to create pod")
 			continue
 		}
 	}
@@ -335,7 +333,7 @@ func (r *FlOperatorReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-// Find out if a certain deployment is running
+// Find out if a certain resource is running
 func (r *FlOperatorReconciler) isResourceFound(ctx context.Context, namespacedName types.NamespacedName, object client.Object) (bool, error) {
 	err := r.Get(ctx, namespacedName, object)
 	if err != nil {
@@ -348,6 +346,6 @@ func (r *FlOperatorReconciler) isResourceFound(ctx context.Context, namespacedNa
 	return true, nil
 }
 
-func getDeploymentName(task *pb.OrchestratorMessage_TaskSpec) string {
-	return fmt.Sprintf("%s-%s", deploymentNameFlClient, task.Workflow)
+func getPodName(task *pb.OrchestratorMessage_TaskSpec) string {
+	return fmt.Sprintf("%s-%s", podNameFlClient, task.Workflow)
 }
