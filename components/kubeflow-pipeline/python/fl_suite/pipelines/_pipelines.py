@@ -32,12 +32,12 @@ def _pipeline(
     # pylint: disable=too-many-arguments
     @dsl.pipeline()
     def fl_pipeline(
-        image_tag: str,
-        num_rounds: int,
-        num_local_rounds: int,
-        min_available_clients: int,
-        min_fit_clients: int,
-        min_eval_clients: int,
+        image_tag: str = _create_image_tag("fl-client"),
+        num_rounds: int = 3,
+        num_local_rounds: int = 1,
+        min_available_clients: int = 2,
+        min_fit_clients: int = 2,
+        min_eval_clients: int = 2,
     ) -> None:
         with ExitHandler(cleanup_kubernetes_resources()):
             if fl_client is not None:
@@ -81,7 +81,7 @@ def build(
     fl_client_context_url: Optional[str] = None,
     fl_client_image: Optional[str] = None,
     fl_server_image: Optional[str] = None,
-    package_path: str = ".",
+    package_path: str = "pipeline.yaml",
     registry: str = "ghcr.io/katulu-io/fl-suite",
     verify_registry_tls=True,
 ) -> None:
