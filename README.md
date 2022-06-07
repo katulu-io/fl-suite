@@ -16,3 +16,7 @@ Already cloned without recursive options? Run the following command to initializ
 ```sh
 git submodule update --init --recursive
 ```
+
+### Local kubernetes cluster
+
+For instructions how to spin up a local kubernetes environment please see the [develop README.md](develop/README.md)

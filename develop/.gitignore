@@ -1,0 +1,3 @@
+# KUBECONFIG
+/local.fl-suite.kubeconfig.yaml
+/.local.fl-suite-internal.kubeconfig.yaml

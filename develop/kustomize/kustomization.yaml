@@ -1,0 +1,135 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../components/fl-operator/kustomize/samples
+  - ../../components/fl-operator
+  - ../../kustomize/fl-suite/overlays/standalone
+  - allow-fl-operator-access.yaml
+
+secretGenerator:
+  - name: internal-registry-credentials
+    namespace: katulu-fl
+    type: kubernetes.io/dockerconfigjson
+    files:
+      - .dockerconfigjson=config/internal-registry-credentials.json
+
+  # Used by the fl-operator's pods to pull the internal-registry container images
+  - name: regcred
+    namespace: katulu-fl
+    type: kubernetes.io/dockerconfigjson
+    files:
+      - .dockerconfigjson=config/internal-registry-credentials.json
+
+configMapGenerator:
+  # Kind does not have a cert in the cluster CA bundle that can authenticate the kubelet cert so we skip the kubelet verification
+  - name: spire-agent
+    namespace: spire
+    behavior: replace
+    files:
+      - agent.conf=config/spire-agent.conf
+
+patches:
+  # In this setup, the FLOperator is running inside the same cluster as the FLOrchestrator, therefore we can
+  # communicate through the istio-ingressgateway directly. But the SNI is needed to do the routing in Istio.
+  - patch: |-
+      ---
+      apiVersion: fl.katulu.io/v1alpha1
+      kind: FlOperator
+      metadata:
+        name: floperator-sample
+        namespace: katulu-fl
+      spec:
+        orchestrator-url: istio-ingressgateway.istio-system
+        orchestrator-sni: fl-orchestrator.fl-suite
+        orchestrator-port: 443
+
+  # The fl-operator needs a (istio) sidecar to get access to the fl-operator-envoyproxy running in the katulu-fl ns.
+  # The allow-fl-operator-access (istio) authorization policy is required to grant the access
+  - patch: |-
+      ---
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: fl-operator-system
+        labels:
+          istio-injection: enabled
+
+  # Set the container-registry to listen to self container-name: local.fl-suite-control-plane
+  - patch: |-
+      - op: replace
+        path: /spec/hosts
+        value:
+          - local.fl-suite-control-plane
+    target:
+      group: networking.istio.io
+      name: container-registry
+      namespace: container-registry
+      kind: VirtualService
+  - patch: |-
+      - op: replace
+        path: /spec/servers/0/hosts/0
+        value: local.fl-suite-control-plane
+    target:
+      group: networking.istio.io
+      name: container-registry
+      namespace: container-registry
+      kind: Gateway
+  - patch: |-
+      - op: replace
+        path: /spec/configPatches/0/match/routeConfiguration/vhost/name
+        value: local.fl-suite-control-plane:80
+    target:
+      group: networking.istio.io
+      name: remove-kubeflow-authz
+      namespace: istio-system
+      kind: EnvoyFilter
+
+  # Set the fl-orchestrator SNI (VirtualService and Gateway) to fl-orchestrator.fl-suite.
+  # This SNI is accessed via the envoyproxies so this doesn't need a matching DNS record.
+  - patch: |-
+      - op: replace
+        path: /spec/tls/0/match/0/sniHosts/0
+        value: fl-orchestrator.fl-suite
+      - op: replace
+        path: /spec/hosts/0
+        value: fl-orchestrator.fl-suite
+    target:
+      group: networking.istio.io
+      name: fl-orchestrator-envoyproxy
+      namespace: katulu-fl
+      kind: VirtualService
+  - patch: |-
+      - op: replace
+        path: /spec/servers/0/hosts/0
+        value: fl-orchestrator.fl-suite
+    target:
+      group: networking.istio.io
+      name: fl-orchestrator-envoyproxy
+      namespace: katulu-fl
+      kind: Gateway
+
+  # Exposing istio-ingressgateway to static node-ports: http=30080 and https=30443 to be able to port-forward in kind
+  - patch: |-
+      ---
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: istio-ingressgateway
+        namespace: istio-system
+      spec:
+        ports:
+          - name: http2
+            port: 80
+            protocol: TCP
+            targetPort: 8080
+            nodePort: 30080
+          - name: https
+            port: 443
+            protocol: TCP
+            targetPort: 8443
+            nodePort: 30443
+
+generatorOptions:
+  disableNameSuffixHash: true
