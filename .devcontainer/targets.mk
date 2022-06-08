@@ -9,6 +9,8 @@ DEV_CONTAINER_WORKING_DIR = /workspace$(CURDIR:$(DEV_CONTAINER_MOUNT)%=%)
 DOCKER_CONFIG_JSON = $(HOME)/.docker/config.json
 DOCKER_LINUX_OPTS = -u $(shell id -u):$(shell id -g) --group-add=$(shell getent group docker | cut -d: -f3)
 DOCKER_OTHER_OS_OPTS =
+DOCKER_NETWORK_NAME ?=
+DOCKER_NETWORK_OPTS =
 
 ifeq ($(shell uname), Linux)
 	DOCKER_OS_OPTS = $(DOCKER_LINUX_OPTS)
@@ -16,6 +18,9 @@ else
 	DOCKER_OS_OPTS = $(DOCKER_OTHER_OS_OPTS)
 endif
 
+ifneq ($(DOCKER_NETWORK_NAME),)
+	DOCKER_NETWORK_OPTS = --network=$(DOCKER_NETWORK_NAME)
+endif
 
 --pull-devcontainer:
 	@docker pull ${MAKEVAR_REGISTRY}/${DEV_CONTAINER_IMAGE_NAME}:${DEV_CONTAINER_TAG} || true
@@ -35,7 +40,10 @@ devcontainer-%: ENVFILE := $(shell mktemp)
 devcontainer-%: devcontainer
 	env | grep -e 'AWS_' -e 'ARM_' -e 'GITHUB_' -e 'MAKEVAR_' -e 'SKIP_' -e 'TF_' >> ${ENVFILE} || true
 	echo MAKEVAR_DIND=true >> ${ENVFILE}
-	docker run --rm $(DOCKER_OS_OPTS) \
+	@if [ -n "$(DOCKER_NETWORK_NAME)" ]; then \
+		docker network create $(DOCKER_NETWORK_NAME) || true; \
+	fi
+	docker run --rm $(DOCKER_OS_OPTS) $(DOCKER_NETWORK_OPTS) \
 		-v ~/.kube/config:$(DEV_CONTAINER_WORKING_DIR)/.kube/config \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v $(DEV_CONTAINER_MOUNT):/workspace \

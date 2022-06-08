@@ -150,6 +150,18 @@ RUN url="https://raw.githubusercontent.com/python-poetry/poetry/master/install-p
     wget -q -O- "$url" | POETRY_VERSION=1.1.13 python3 -; \
     poetry --version;
 
+# Install kind
+RUN url="https://kind.sigs.k8s.io/dl/v0.13.0/kind-linux-amd64"; \
+    sha256="c80c6d1013337cbbe226c2eda0a3dc2d75af16e5fa8af4ce3fc9fedcf1f9d2dc"; \
+    \
+    wget -O kind "$url" --progress=dot:giga; \
+    echo "$sha256 kind" | sha256sum --strict --check -; \
+    \
+    chmod +x kind; \
+    mv kind /usr/local/bin; \
+    \
+    kind version;
+
 WORKDIR /workspace
 
 CMD [ "/bin/bash" ]
