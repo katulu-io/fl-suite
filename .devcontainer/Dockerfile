@@ -45,8 +45,8 @@ ENV BUILDAH_ISOLATION=chroot
 # Install go (adapted from https://github.com/docker-library/golang/blob/master/1.16/buster/Dockerfile)
 ENV PATH /usr/local/go/bin:$PATH
 # hadolint ignore=SC2041
-RUN url='https://go.dev/dl/go1.18.1.linux-amd64.tar.gz'; \
-    sha256='b3b815f47ababac13810fc6021eb73d65478e0b2db4b09d348eefad9581a2334'; \
+RUN url='https://go.dev/dl/go1.18.3.linux-amd64.tar.gz'; \
+    sha256='956f8507b302ab0bb747613695cdae10af99bbd39a90cae522b7c0302cc27245'; \
     \
     wget -O go.tgz.asc "$url.asc" --progress=dot:giga; \
     wget -O go.tgz "$url" --progress=dot:giga; \
