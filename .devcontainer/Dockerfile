@@ -83,10 +83,6 @@ RUN url="https://github.com/golangci/golangci-lint/releases/download/v1.45.2/gol
     \
     golangci-lint version
 
-# Install controller-gen and envtest
-RUN go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.8.0 && \
-  go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
-
 # This env is used by tools like karmna (teset runner) to launch chromium for browser testing.
 ENV CHROME_BIN=/usr/bin/chromium
 
