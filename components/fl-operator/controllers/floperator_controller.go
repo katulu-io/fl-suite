@@ -30,7 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
+	logger "sigs.k8s.io/controller-runtime/pkg/log"
 
 	flv1alpha1 "github.com/katulu-io/fl-suite/fl-operator/api/v1alpha1"
 	orchestratorClient "github.com/katulu-io/fl-suite/fl-operator/pkg/client"
@@ -50,7 +50,7 @@ const (
 	configMapNameEnvoyProxy  = "fl-operator-envoyproxy"
 	deploymentNameEnvoyProxy = "fl-operator-envoyproxy"
 	serviceNameEnvoyProxy    = "fl-operator-envoyproxy"
-	deploymentNameFlClient   = "flower-client"
+	podNameFlClient          = "flower-client"
 )
 
 //+kubebuilder:rbac:groups=fl.katulu.io,resources=floperators,verbs=get;list;watch;create;update;patch;delete
@@ -59,6 +59,7 @@ const (
 //+kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups="",resources=services,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups="",resources=pods,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -70,40 +71,44 @@ const (
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.11.0/pkg/reconcile
 func (r *FlOperatorReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	l := log.FromContext(ctx)
-
+	log := logger.FromContext(ctx)
 	flOperator := &flv1alpha1.FlOperator{}
+
 	err := r.Get(ctx, req.NamespacedName, flOperator)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			l.Info("FlOperator resource not found. Ignoring since object must be deleted")
+			log.Info("FlOperator resource not found. Ignoring since object must be deleted")
 			return ctrl.Result{}, nil
 		}
 
-		l.Error(err, "Could not get FlOperator")
+		log.Error(err, "Could not get FlOperator")
 		return ctrl.Result{}, err
 	}
 
+	// Bootstrap envoy configmap, deployment and service
+	// These resources should always be there for the tasks
+	// coming via gRPC from FL-Orchestrator
 	err = r.bootstrapEnvoyConfigMap(ctx, req.NamespacedName.Namespace, flOperator)
 	if err != nil {
-		l.Error(err, "Could not create envoyproxy configmap")
+		log.Error(err, "Could not create envoyproxy configmap")
 		return ctrl.Result{}, err
 	}
 
 	err = r.bootstrapEnvoyDeployment(ctx, req.NamespacedName.Namespace, flOperator)
 	if err != nil {
-		l.Error(err, "Could not create envoyproxy deployment")
+		log.Error(err, "Could not create envoyproxy deployment")
 		return ctrl.Result{}, err
 	}
 
 	err = r.bootstrapEnvoyService(ctx, req.NamespacedName.Namespace, flOperator)
 	if err != nil {
-		l.Error(err, "Could not create envoyproxy service")
+		log.Error(err, "Could not create envoyproxy service")
 		return ctrl.Result{}, err
 	}
 
+	// Create gRPC client for connection to FL-Orchestrator
 	if r.OrchestratorClient == nil {
-		l.Info("Creating OrchestratorClient")
+		log.Info("Creating OrchestratorClient")
 
 		timeout := time.Second * 30 // TODO move this into the spec?
 		serverAddress := fmt.Sprintf("%s.%s:9080", serviceNameEnvoyProxy, req.Namespace)
@@ -112,7 +117,7 @@ func (r *FlOperatorReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		}
 		conn, err := grpc.Dial(serverAddress, dialOptions...)
 		if err != nil {
-			l.Error(err, "Could not create gRPC connection")
+			log.Error(err, "Could not create gRPC connection")
 			return ctrl.Result{}, err
 		}
 
@@ -120,85 +125,74 @@ func (r *FlOperatorReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		r.OrchestratorClient = &cl
 	}
 
-	resp, err := r.OrchestratorClient.GetTasks(ctx)
+	// Fetch tasks from FL-Orchestrator
+	response, err := r.OrchestratorClient.GetTasks(ctx)
 	if err != nil {
-		l.Error(err, "Could not fetch tasks")
+		log.Error(err, "Could not fetch tasks")
 		return ctrl.Result{
 			Requeue: true,
 		}, err
 	}
 
-	tasks := resp.GetTasks()
+	tasks := response.GetTasks()
+	log.Info(fmt.Sprintf("Got %d tasks from FL-Orchestrator", len(tasks)))
 
-	l.Info(fmt.Sprintf("Found %d tasks", len(tasks)))
-
-	// First get the list of all running fl-client deployments
-	deploymentsList := &appsv1.DeploymentList{}
+	// First get the list of all running fl-client pods
+	podsList := &corev1.PodList{}
 	opts := []client.ListOption{
 		client.InNamespace(req.NamespacedName.Namespace),
 		client.MatchingLabels{resources.FlClientDeploymentLabelKey: resources.FlClientDeploymentLabelValue},
 	}
-	err = r.List(ctx, deploymentsList, opts...)
+	err = r.List(ctx, podsList, opts...)
 	if err != nil {
-		l.Error(err, "Could not get the list of fl-client deployments")
+		log.Error(err, "Could not get the list of fl-client deployments")
 		return ctrl.Result{
 			Requeue: true,
 		}, err
 	}
 
-	// Then cleanup the running clients that don't have matching server anymore
-	for _, deployment := range deploymentsList.Items {
-		serverRunning := false
+	// Then cleanup the running clients that don't have
+	// a matching task in the response
+	for _, pod := range podsList.Items {
+		clientRunning := false
 
 		for _, task := range tasks {
-			serverName := getDeploymentName(task)
-
-			if serverName == deployment.Name {
-				serverRunning = true
-				continue
+			if pod.Name == getPodName(task) {
+				clientRunning = true
+				break
 			}
 		}
 
-		if !serverRunning {
-			deprecatedDeployment := &appsv1.Deployment{}
-			deploymentName := types.NamespacedName{
-				Name:      deployment.Name,
-				Namespace: deployment.Namespace,
-			}
+		if !clientRunning {
+			log.Info(fmt.Sprintf("Cleaning up pod: %s", pod.ObjectMeta.Name))
 
-			err := r.Get(ctx, deploymentName, deprecatedDeployment)
+			err = r.Delete(ctx, &pod)
 			if err != nil {
-				l.Error(err, "Couldn't get deployment resource")
-				continue
-			}
-
-			err = r.Delete(ctx, deprecatedDeployment)
-			if err != nil {
-				l.Error(err, "Couldn't delete deployment resource")
+				log.Error(err, "Couldn't delete pod resource")
 				continue
 			}
 		}
 	}
 
 	for _, task := range tasks {
-		l.Info(fmt.Sprintf("Found run ID: %s", task.ID))
+		log.Info(fmt.Sprintf("Found run ID: %s", task.ID))
 
-		deploymentName := types.NamespacedName{
-			Name:      getDeploymentName(task),
+		podName := types.NamespacedName{
+			Name:      getPodName(task),
 			Namespace: req.Namespace,
 		}
 
-		found, err := r.isResourceFound(ctx, deploymentName, &appsv1.Deployment{})
+		found, err := r.isResourceFound(ctx, podName, &corev1.Pod{})
 		if err != nil {
-			l.Error(err, "Failed to find out if fl-client is running")
+			log.Error(err, "Failed to find out if fl-client is running")
 			continue
 		}
 		if found {
-			l.Info("Deployment already running")
+			log.Info("Pod is already running")
 			continue
 		}
 
-		l.Info("Deployment not found, creating...")
+		log.Info("Pod not found, creating...")
 		envoyConfigContext := resources.EnvoyConfigContext{
 			EndpointAddress: flOperator.Spec.FlOrchestratorURL,
 			EndpointPort:    flOperator.Spec.FlOrchestratorPort,
@@ -212,21 +206,21 @@ func (r *FlOperatorReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		}
 		err = r.setupEnvoyproxyConfig(ctx, flOperator, configMapName, envoyConfigContext)
 		if err != nil {
-			l.Error(err, "Failed to setup flower-client's envoy config")
+			log.Error(err, "Failed to setup flower-client's envoy config")
 			continue
 		}
 
-		dep := resources.NewDeployment(task, deploymentName, task.Workflow)
+		pod := resources.NewPod(task, podName, task.Workflow)
 
-		err = ctrl.SetControllerReference(flOperator, dep, r.Scheme)
+		err = ctrl.SetControllerReference(flOperator, pod, r.Scheme)
 		if err != nil {
-			l.Error(err, "Failed to set controller reference for the deployment")
+			log.Error(err, "Failed to set controller reference for the pod")
 			continue
 		}
 
-		err = r.Create(ctx, dep)
+		err = r.Create(ctx, pod)
 		if err != nil {
-			l.Error(err, "Failed to create the deployment")
+			log.Error(err, "Failed to create pod")
 			continue
 		}
 	}
@@ -335,7 +329,7 @@ func (r *FlOperatorReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-// Find out if a certain deployment is running
+// Find out if a certain resource is running
 func (r *FlOperatorReconciler) isResourceFound(ctx context.Context, namespacedName types.NamespacedName, object client.Object) (bool, error) {
 	err := r.Get(ctx, namespacedName, object)
 	if err != nil {
@@ -348,6 +342,6 @@ func (r *FlOperatorReconciler) isResourceFound(ctx context.Context, namespacedNa
 	return true, nil
 }
 
-func getDeploymentName(task *pb.OrchestratorMessage_TaskSpec) string {
-	return fmt.Sprintf("%s-%s", deploymentNameFlClient, task.Workflow)
+func getPodName(task *pb.OrchestratorMessage_TaskSpec) string {
+	return fmt.Sprintf("%s-%s", podNameFlClient, task.Workflow)
 }
