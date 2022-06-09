@@ -4,6 +4,8 @@ MAKEVAR_REGISTRY?=ghcr.io/katulu-io/fl-suite
 MAKEVAR_VERSION?=0.0.0-dev-$(shell git log -n 1 --pretty=format:%h)
 CONTAINER_TAG = $(shell echo "${MAKEVAR_VERSION}" | sed "s/\+[0-9a-zA-Z-]*//")
 
+GOBIN = $(shell pwd)/bin
+
 # Image URL to use all building/pushing image targets
 IMG ?= ${MAKEVAR_REGISTRY}/fl-operator:${CONTAINER_TAG}
 
@@ -37,38 +39,44 @@ help: ## Display this help.
 
 ##@ Development
 
+bin/controller-gen:
+	GOBIN="$(GOBIN)" go install sigs.k8s.io/controller-tools/cmd/controller-gen
+
+bin/setup-envtest:
+	GOBIN="$(GOBIN)" go install sigs.k8s.io/controller-runtime/tools/setup-envtest
+
 .PHONY: manifests
-manifests: ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
-	controller-gen rbac:roleName=manager-role crd webhook paths="./..." \
+manifests: bin/controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
+	PATH="$(GOBIN):$(PATH)" controller-gen rbac:roleName=manager-role crd webhook paths="./..." \
 		output:crd:artifacts:config=kustomize/crd/bases \
 		output:rbac:artifacts:config=kustomize/rbac
 
 .PHONY: generate
-generate: ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
-	controller-gen object:headerFile="hack/boilerplate.go.txt" paths="./..."
+generate: bin/controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
+	PATH="$(GOBIN):$(PATH)" controller-gen object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
 .PHONY: test
-test: ## Run tests.
-	KUBEBUILDER_ASSETS="$(shell setup-envtest use $(ENVTEST_K8S_VERSION) -p path)" go test -v ./... -coverprofile cover.out
+test: bin/setup-envtest ## Run tests.
+	KUBEBUILDER_ASSETS="$(shell $(GOBIN)/setup-envtest use $(ENVTEST_K8S_VERSION) -p path)" go test -v ./... -coverprofile cover.out
 
 ##@ Build
 
 .PHONY: build
 build: generate ## Build manager binary.
-	CGO_ENABLED=0 go build -o bin/manager main.go
+	CGO_ENABLED=0 go build -o bin/manager ./cmd/manager
 
 .PHONY: run
 run:
-	go run ./main.go
+	go run ./cmd/manager
 
-.PHONY: docker-build
-dist docker-build: manifests # test ## Build docker image with the manager.
+.PHONY: dist
+dist: manifests # test ## Build docker image with the manager.
 	DOCKER_BUILDKIT=1 docker build -t ${IMG} .
 	cp kustomization.yaml.tpl kustomization.yaml
 	kustomize edit set image controller=${IMG}
 
-.PHONY: docker-push
-push docker-push: ## Push docker image with the manager.
+.PHONY: push
+push: ## Push docker image with the manager.
 	docker push ${IMG}
 
 # Handy install target to iterate development over a single component
@@ -80,3 +88,7 @@ lint:
 	go mod download
 	golangci-lint run --allow-parallel-runners --timeout 5m
 .PHONY: lint
+
+clean:
+	rm -rf bin/
+.PHONY: clean
