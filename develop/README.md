@@ -20,7 +20,6 @@ The kind cluster uses a local registry to host the fl-suite container images. To
 make local-registry
 ```
 
-
 ### 2. Push the fl-suite images to the local container registry
 
 Build, dist and push the fl-suite's container images. This needs to be done at the root of the project:
@@ -62,7 +61,6 @@ This and other CRD related errors are expected. The namespace "katulu-fl" gets c
 A kubeconfig file is generated which can be used to configure `kubectl` and access the kind cluster:
 
 ```shell
-export KUBECONFIG=local.fl-suite.kubeconfig.yaml
 kubectl get nodes
 NAME                            STATUS   ROLES                  AGE     VERSION
 local.fl-suite-control-plane   Ready    control-plane,master   5m00s   v1.21.10
@@ -71,7 +69,6 @@ local.fl-suite-control-plane   Ready    control-plane,master   5m00s   v1.21.10
 ### 4. Wait for all the pods to be ready
 
 ```shell
-export KUBECONFIG=local.fl-suite.kubeconfig.yaml
 kubectl get pods -n cert-manager
 kubectl get pods -n istio-system
 kubectl get pods -n auth
