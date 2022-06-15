@@ -1,0 +1,5 @@
+/.poetry.stamp
+
+/backend/edge-identity.db
+/kustomize/base/kustomization.yaml
+/backend/apps/default/static/

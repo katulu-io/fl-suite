@@ -1,3 +1,6 @@
 [submodule "components/vendor/kubeflow-manifests"]
 	path = components/vendor/kubeflow-manifests
 	url = https://github.com/kubeflow/manifests.git
+[submodule "components/vendor/kubeflow"]
+	path = components/vendor/kubeflow
+	url = https://github.com/kubeflow/kubeflow.git

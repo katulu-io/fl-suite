@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS Edge (
+	edge_id INTEGER PRIMARY KEY,
+	name TEXT NOT NULL,
+	namespace TEXT NOT NULL,
+	created_at TEXT NOT NULL
+);

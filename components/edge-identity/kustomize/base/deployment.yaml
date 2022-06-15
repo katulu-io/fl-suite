@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment
+spec:
+  replicas: 1
+  template:
+    metadata:
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      containers:
+        - name: edges-web-app
+          image: edge-identity
+          ports:
+          - containerPort: 5000
+          env:
+          - name: APP_PREFIX
+            value: /edges
+          - name: USERID_HEADER
+            value: kubeflow-userid
+          - name: USERID_PREFIX
+            value: ""
+      serviceAccountName: service-account
