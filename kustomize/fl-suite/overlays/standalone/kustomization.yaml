@@ -4,12 +4,12 @@ kind: Kustomization
 
 resources:
   # Istio
-  - ../../../../components/vendor/kubeflow/common/istio-1-11/istio-crds/base
-  - ../../../../components/vendor/kubeflow/common/istio-1-11/istio-namespace/base
-  - ../../../../components/vendor/kubeflow/common/istio-1-11/istio-install/base
+  - ../../../../components/vendor/kubeflow-manifests/common/istio-1-11/istio-crds/base
+  - ../../../../components/vendor/kubeflow-manifests/common/istio-1-11/istio-namespace/base
+  - ../../../../components/vendor/kubeflow-manifests/common/istio-1-11/istio-install/base
 
   # Cert-manager
-  - ../../../../components/vendor/kubeflow/common/cert-manager/cert-manager/base
+  - ../../../../components/vendor/kubeflow-manifests/common/cert-manager/cert-manager/base
 
   # FL Suite
   - ../../base
