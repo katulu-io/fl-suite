@@ -24,7 +24,7 @@ build: dependencies
 .PHONY: build
 
 dist:
-	DOCKER_BUILDKIT=1 docker build -t ${MAKEVAR_REGISTRY}/centraldashboard:${CONTAINER_TAG} .
+	docker build -t ${MAKEVAR_REGISTRY}/centraldashboard:${CONTAINER_TAG} .
 	cp kustomization.tpl.yaml kustomization.yaml
 	kustomize edit set image centraldashboard=$(MAKEVAR_REGISTRY)/centraldashboard:$(CONTAINER_TAG)
 .PHONY: dist

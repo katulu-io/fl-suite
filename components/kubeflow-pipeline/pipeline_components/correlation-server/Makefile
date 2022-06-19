@@ -17,7 +17,7 @@ build:
 .PHONY: build
 
 dist:
-	DOCKER_BUILDKIT=1 docker build -t ${MAKEVAR_REGISTRY}/correlation-server:${CONTAINER_TAG} .
+	docker build -t ${MAKEVAR_REGISTRY}/correlation-server:${CONTAINER_TAG} .
 .PHONY: dist
 
 push:

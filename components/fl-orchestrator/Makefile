@@ -18,7 +18,7 @@ build:
 .PHONY: build
 
 dist:
-	DOCKER_BUILDKIT=1 docker build -t ${MAKEVAR_REGISTRY}/fl-orchestrator:${CONTAINER_TAG} .
+	docker build -t ${MAKEVAR_REGISTRY}/fl-orchestrator:${CONTAINER_TAG} .
 	cp kustomization.tpl.yaml kustomization.yaml
 	kustomize edit set image fl-orchestrator=${MAKEVAR_REGISTRY}/fl-orchestrator:${CONTAINER_TAG}
 .PHONY: dist

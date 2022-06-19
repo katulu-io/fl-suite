@@ -23,7 +23,7 @@ build:
 .PHONY: build
 
 dist:
-	DOCKER_BUILDKIT=1 docker build -t ${MAKEVAR_REGISTRY}/dex:${CONTAINER_TAG} .
+	docker build -t ${MAKEVAR_REGISTRY}/dex:${CONTAINER_TAG} .
 	cp kustomization.tpl.yaml kustomization.yaml
 	kustomize edit set image katulu-dex=${MAKEVAR_REGISTRY}/dex:${CONTAINER_TAG}
 .PHONY: dist

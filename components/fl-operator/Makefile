@@ -71,7 +71,7 @@ run:
 
 .PHONY: dist
 dist: manifests # test ## Build docker image with the manager.
-	DOCKER_BUILDKIT=1 docker build -t ${IMG} .
+	docker build -t ${IMG} .
 	cp kustomization.yaml.tpl kustomization.yaml
 	kustomize edit set image controller=${IMG}
 

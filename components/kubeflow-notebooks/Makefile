@@ -23,7 +23,7 @@ dist:
 	cp ../kubeflow-pipeline/python/dist/fl_suite-${PIP_VERSION}-py3-none-any.whl dist/
 	sed -e "s/\\\$$\\\$$container-tag\\\$$\\\$$/${PIP_VERSION}/g" Dockerfile.tpl > dist/Dockerfile
 	sed -e "s/\\\$$\\\$$container-tag\\\$$\\\$$/${PIP_VERSION}/g" requirements.tpl.txt > dist/requirements.txt
-	DOCKER_BUILDKIT=1 docker build -t ${MAKEVAR_REGISTRY}/katulu-fl-jupyter-full:${CONTAINER_TAG} dist
+	docker build -t ${MAKEVAR_REGISTRY}/katulu-fl-jupyter-full:${CONTAINER_TAG} dist
 .PHONY: dist
 
 push:
