@@ -1,0 +1,13 @@
+services:
+  devcontainer:
+    build:
+      context: ./.devcontainer
+    image: ghcr.io/katulu-io/fl-suite/devcontainer:latest
+    volumes:
+      - ./:/workspace
+      - ${XDG_RUNTIME_DIR}/podman/podman.sock:/var/run/docker.sock
+    environment:
+      - HOME=/workspace
+    # user: ${USER}:${GROUPS}
+    # ports:
+    #   - 3000:3000
