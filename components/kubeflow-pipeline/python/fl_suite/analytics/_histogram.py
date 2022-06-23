@@ -1,7 +1,8 @@
-from typing import Callable, Optional
+from typing import Callable, Optional, Tuple
 
 from kfp import Client
 from kfp.components import load_component
+from kfp.components._structures import InputSpec, InputValuePlaceholder
 from kfp.dsl import ContainerOp, ExitHandler, pipeline
 
 from .._version import __version__
@@ -12,24 +13,26 @@ from ..pipelines import (
     create_image_tag,
     setup_kubernetes_resources,
 )
-from ._analytics import analytics_server_spec
+from ._analytics import Parameter, analytics_server_spec
 
 
 # pylint: disable-next=too-many-arguments
-def correlate(
+def histogram(
     data_func: Callable[[str, bool], ContainerOp],
+    nbins: int,
+    hrange: Tuple[float, float],
     min_available_clients: int = 2,
     host: Optional[str] = None,
     experiment_name: Optional[str] = None,
     registry: str = "ghcr.io/katulu-io/fl-suite",
     verify_registry_tls: bool = True,
 ) -> None:
-    """Run distributed correlation of data provided by multiple clients."""
+    """Run distributed histogram of data provided by multiple clients."""
     analytics_server = f"{registry}/analytics-server:{__version__}"
 
     client = Client(host)
     pipeline_run = client.create_run_from_pipeline_func(
-        correlation_pipeline(
+        histogram_pipeline(
             fl_client=data_func,
             fl_server_image=analytics_server,
             registry=registry,
@@ -37,6 +40,9 @@ def correlate(
         ),
         arguments={
             "min_available_clients": min_available_clients,
+            "nbins": nbins,
+            "hmin": hrange[0],
+            "hmax": hrange[1],
         },
         experiment_name=experiment_name,
     )
@@ -47,19 +53,41 @@ def correlate(
         raise RuntimeError(f"Run {status}")
 
 
-def correlation_server(
+def histogram_server(
     server_image: str,
     min_available_clients: int,
+    nbins: int,
+    hrange: Tuple[float, float],
 ) -> ContainerOp:
-    """Component to run a Flower server for federated correlation."""
+    """Component to run a Flower server for federated histogram."""
     spec = analytics_server_spec(
         server_image=server_image,
-        subcommand="correlation",
+        subcommand="histogram",
+        parameters=[
+            Parameter(
+                InputSpec("nbins", type="Integer"),
+                "--nbins",
+                InputValuePlaceholder("nbins"),
+            ),
+            Parameter(
+                InputSpec("hmin", type="Float"),
+                "--hmin",
+                InputValuePlaceholder("hmin"),
+            ),
+            Parameter(
+                InputSpec("hmax", type="Float"),
+                "--hmax",
+                InputValuePlaceholder("hmax"),
+            ),
+        ],
     )
     component = load_component(component_spec=spec)
     # pylint: disable-next=not-callable
     analytics_server_op: ContainerOp = component(
         min_available_clients,
+        nbins,
+        hrange[0],
+        hrange[1],
     )
     analytics_server_op.enable_caching = False
     add_envoy_proxy(analytics_server_op)
@@ -67,18 +95,21 @@ def correlation_server(
     return analytics_server_op
 
 
-def correlation_pipeline(
+def histogram_pipeline(
     registry: str,
     verify_registry_tls: bool,
     fl_client: Callable[[str, bool], ContainerOp],
     fl_server_image: str,
 ):
-    """Creates a correlation pipeline."""
+    """Create a histogram pipeline."""
 
-    @pipeline()
-    def correlation(
+    @pipeline(name="histogram")
+    def h_pipeline(
         min_available_clients: int,
-        image_tag: str = create_image_tag("correlation-client"),
+        nbins: int,
+        hmin: float,
+        hmax: float,
+        image_tag: str = create_image_tag("histogram-client"),
     ) -> None:
         with ExitHandler(cleanup_kubernetes_resources()):
             prepare_context_op = fl_client(registry, verify_registry_tls)
@@ -90,10 +121,9 @@ def correlation_pipeline(
             )
 
             setup_kubernetes_resources_op = setup_kubernetes_resources()
-            analytics_server_op = correlation_server(
-                fl_server_image,
-                min_available_clients,
+            analytics_server_op = histogram_server(
+                fl_server_image, min_available_clients, nbins, (hmin, hmax)
             )
             analytics_server_op.after(setup_kubernetes_resources_op)
 
-    return correlation
+    return h_pipeline

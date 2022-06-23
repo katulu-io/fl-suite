@@ -12,10 +12,9 @@ from kfp.components._structures import (
     OutputPathPlaceholder,
     OutputSpec,
 )
-from kfp.dsl import ContainerOp, Sidecar
-from kubernetes import client as k8s_client
+from kfp.dsl import ContainerOp
 
-from ._flower_infrastructure import ENVOYPROXY_NAME
+from ._flower_infrastructure import add_envoy_proxy
 
 
 @dataclass
@@ -90,49 +89,7 @@ def flwr_server(
         fl_params.min_eval_clients,
     )
     flwr_server_op.enable_caching = False
-
-    flwr_server_op.add_sidecar(
-        Sidecar(
-            name="envoyproxy",
-            image="envoyproxy/envoy:v1.20-latest",
-            command=["/docker-entrypoint.sh"],
-            args=[
-                "-l",
-                "debug",
-                "--local-address-ip-version",
-                "v4",
-                "-c",
-                "/run/envoy/envoy.yaml",
-                "--base-id",
-                "1",
-            ],
-            volume_mounts=[
-                k8s_client.V1VolumeMount(
-                    name="envoy-config", mount_path="/run/envoy", read_only=True
-                ),
-                k8s_client.V1VolumeMount(
-                    name="spire-agent-socket",
-                    mount_path="/run/spire/sockets",
-                    read_only=True,
-                ),
-            ],
-        )
-    )
-    flwr_server_op.add_volume(
-        k8s_client.V1Volume(
-            name="envoy-config",
-            config_map=k8s_client.V1ConfigMapVolumeSource(name=ENVOYPROXY_NAME),
-        )
-    )
-    flwr_server_op.add_volume(
-        k8s_client.V1Volume(
-            name="spire-agent-socket",
-            host_path=k8s_client.V1HostPathVolumeSource(
-                path="/run/spire/sockets", type="DirectoryOrCreate"
-            ),
-        )
-    )
-    flwr_server_op.add_pod_label("spire-workload", RESOURCE_ID)
+    add_envoy_proxy(flwr_server_op)
 
     return flwr_server_op
 

@@ -1,9 +1,12 @@
 """Katulu Federated Analytics Tools."""
 
-from ._correlation import correlate, data, prepare_correlation_client
+from ._analytics import data, prepare_analytics_client
+from ._correlation import correlate
+from ._histogram import histogram
 
 __all__ = [
     "data",
-    "prepare_correlation_client",
+    "prepare_analytics_client",
     "correlate",
+    "histogram",
 ]
