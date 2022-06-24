@@ -1,15 +1,78 @@
+import io
+import json
+from argparse import ArgumentParser, Namespace
 from dataclasses import dataclass
-from typing import List
+from typing import Dict, List
 
+import matplotlib.pyplot as plt
 import numpy as np
+from flwr.common import Properties, Scalar
+
+from .provider import AnalyticsProvider, scalar_to_numpy
 
 
 @dataclass
 class AggregationData:
+    num_features: int
     num_entries: int
     sums: np.ndarray
     multiply_sums: np.ndarray
     variances: np.ndarray
+
+
+class CorrelationProvider(AnalyticsProvider):
+    def __init__(self) -> None:
+        self._client_data: List[AggregationData] = []
+
+    def client_input_data(self) -> Dict[str, Scalar]:
+        return {}
+
+    def add_client_data(self, properties: Properties) -> None:
+        self._client_data.append(
+            AggregationData(
+                num_features=properties["features"],
+                num_entries=properties["entries"],
+                sums=scalar_to_numpy(properties["sums"]),
+                multiply_sums=scalar_to_numpy(properties["multiply_sums"]),
+                variances=scalar_to_numpy(properties["variances"]),
+            )
+        )
+
+    def aggregate(self) -> None:
+        num_features = self._client_data[0].num_features
+        self._result = distributed_correlation(num_features, self._client_data)
+
+    def result_metadata_json(self) -> str:
+        fig_svg = io.BytesIO()
+
+        fig, ax = plt.subplots()
+        ax.matshow(self._result)
+
+        plt.savefig(fig_svg, format="svg")
+
+        # Write Kubeflow pipeline metadata
+        metadata = {
+            "version": 1,
+            "outputs": [
+                {
+                    "type": "web-app",
+                    "storage": "inline",
+                    "source": fig_svg.getvalue().decode("utf-8"),
+                },
+            ],
+        }
+
+        return json.dumps(metadata)
+
+    def add_arguments(self, parser: ArgumentParser) -> None:
+        pass
+
+    def set_arguments(self, args: Namespace) -> None:
+        pass
+
+    @property
+    def name(self) -> str:
+        return "correlation"
 
 
 def distributed_correlation(

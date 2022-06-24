@@ -6,6 +6,8 @@ COPY requirements.txt /pipelines/
 RUN python3 -m pip install --no-cache-dir -r /pipelines/requirements.txt && \
     rm /pipelines/requirements.txt
 
-COPY flwr_correlation_client /pipelines/component/flwr_correlation_client
+COPY flwr_analytics_client /pipelines/component/flwr_analytics_client
 
-ENTRYPOINT [ "python3", "/pipelines/component/flwr_correlation_client" ]
+ENV PYTHONPATH "${PYTHONPATH}:/pipelines/component"
+
+ENTRYPOINT [ "python3", "-m", "flwr_analytics_client" ]

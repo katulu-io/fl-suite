@@ -17,11 +17,11 @@ build:
 .PHONY: build
 
 dist:
-	DOCKER_BUILDKIT=1 docker build -t ${MAKEVAR_REGISTRY}/correlation-server:${CONTAINER_TAG} .
+	DOCKER_BUILDKIT=1 docker build -t ${MAKEVAR_REGISTRY}/analytics-client:${CONTAINER_TAG} .
 .PHONY: dist
 
 push:
-	docker push ${MAKEVAR_REGISTRY}/correlation-server:${CONTAINER_TAG}
+	docker push ${MAKEVAR_REGISTRY}/analytics-client:${CONTAINER_TAG}
 .PHONY: push
 
 clean:

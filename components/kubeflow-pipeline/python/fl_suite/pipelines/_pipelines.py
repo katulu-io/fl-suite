@@ -29,10 +29,10 @@ def _pipeline(
     if fl_server_image is None:
         fl_server_image = f"{registry}/fl-server:{__version__}"
 
-    # pylint: disable=too-many-arguments
+    # pylint: disable-next=too-many-arguments
     @dsl.pipeline()
     def fl_pipeline(
-        image_tag: str = _create_image_tag("fl-client"),
+        image_tag: str = create_image_tag("fl-client"),
         num_rounds: int = 3,
         num_local_rounds: int = 1,
         min_available_clients: int = 2,
@@ -135,7 +135,7 @@ def run(
         fl_params = FLParameters()
 
     if not image_tag:
-        image_tag = _create_image_tag("fl-client")
+        image_tag = create_image_tag("fl-client")
 
     client = Client(host)
     pipeline_run = client.create_run_from_pipeline_func(
@@ -164,7 +164,8 @@ def run(
         raise RuntimeError(f"Run {status}")
 
 
-def _create_image_tag(name: str) -> str:
+def create_image_tag(name: str) -> str:
+    """Create an image tag."""
     now = datetime.now(timezone.utc)
     tag = f"{now.year}.{now.month}.{now.day}-{now.hour}.{now.minute}"
 
