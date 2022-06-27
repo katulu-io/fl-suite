@@ -7,6 +7,7 @@ from .client import AnalyticsClient
 from .correlation import CorrelationProvider
 from .data import data
 from .fedhist import HistogramProvider
+from .fedbox import BoxPlotProvider
 from .provider import AnalyticsProvider
 
 log = logging.getLogger(__name__)
@@ -17,6 +18,7 @@ if __name__ == "__main__":
     providers: List[AnalyticsProvider] = [
         CorrelationProvider(d),
         HistogramProvider(d),
+        BoxPlotProvider(d)
     ]
 
     log.info(f"starting client with {', '.join(p.name for p in providers) } providers")
