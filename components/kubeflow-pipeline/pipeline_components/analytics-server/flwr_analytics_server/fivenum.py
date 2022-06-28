@@ -15,7 +15,7 @@ from .fedhist import HistogramData
 
 
 @dataclass
-class fiveNum:
+class FiveNum:
     """Five numbers for box plot."""
 
     minimum: float
@@ -24,17 +24,8 @@ class fiveNum:
     quartile_third: float
     maximum: float
 
-
-@dataclass
-class fiveNumSummary:
-    """Five number summary."""
-
-    histogram: HistogramData
-    hmin: float
-    hmax: float
-    fivenum: Optional[fiveNum] = None
-
-    @staticmethod
+def compute_fivesum(hmin: float, hmax: float, histogram: HistogramData) -> FiveNum:
+    """ Compute five number summary. """
     def inverse_value_bin(histogram: HistogramData, yvalue: float) -> float:
         """
 
@@ -44,25 +35,13 @@ class fiveNumSummary:
         idx = (np.abs(yvalue - histogram.counts)).argmin()
         return histogram.bins[idx]
 
-    def compute(self) -> None:
-        """
-
-        Compute fivenum.
-
-        """
-        dist = self.histogram.counts
-
-        inverse_value_bin = self.inverse_value_bin
-
-        histogram = self.histogram
-        hmin = self.hmin
-        hmax = self.hmax
-
-        self.fivenum = fiveNum(
-            minimum=hmin,
-            quartile_first=inverse_value_bin(histogram, np.quantile(dist, q=0.25)),
-            median=inverse_value_bin(histogram, np.quantile(dist, q=0.50)),
-            quartile_third=inverse_value_bin(histogram, np.quantile(dist, q=0.75)),
-            maximum=hmax,
-        )
-        return None
+    dist = histogram.counts
+    
+    fivenum = FiveNum(
+        minimum=hmin,
+        quartile_first=inverse_value_bin(histogram, np.quantile(dist, q=0.25)),
+        median=inverse_value_bin(histogram, np.quantile(dist, q=0.50)),
+        quartile_third=inverse_value_bin(histogram, np.quantile(dist, q=0.75)),
+        maximum=hmax,
+    )
+    return fivenum

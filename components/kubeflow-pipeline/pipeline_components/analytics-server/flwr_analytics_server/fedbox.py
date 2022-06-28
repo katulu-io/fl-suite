@@ -2,7 +2,7 @@ import io
 import json
 from argparse import ArgumentParser, Namespace
 from typing import Dict, List, Tuple
-from .fivenum import fiveNumSummary
+from .fivenum import compute_fivesum, FiveNum
 from .fedhist import aggregate_histograms, HistogramData
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,10 +11,10 @@ from .provider import AnalyticsProvider, scalar_to_numpy
 
 
 class BoxPlotProvider(AnalyticsProvider):
-    def __init__(self, hrange:Tuple) -> None:
+    def __init__(self) -> None:
         self._client_data: List[HistogramData] = []
         self.nbins = 0
-        self.hrange = hrange
+        self.hrange = (0, 0)
 
     def client_input_data(self) -> Dict[str, Scalar]:
         return {
@@ -33,11 +33,10 @@ class BoxPlotProvider(AnalyticsProvider):
 
     def aggregate(self) -> None:
         client_input = self.client_input_data()
-        five_num = fiveNumSummary(
-            histogram=aggregate_histograms(self._client_data), hmin=client_input['hmin'], hmax=client_input['hmax']
-        )
-        five_num.compute()
-        fn = five_num.fivenum
+        hmin = client_input['hmin']
+        hmax = client_input['hmax']
+        histogram=aggregate_histograms(self._client_data)
+        fn = compute_fivesum(hmin, hmax, histogram)
         self._result = fn
 
     def result_metadata_json(self) -> str:

@@ -7,7 +7,7 @@ Katulu GmbH
 
 """
 import io
-
+import argparse
 import numpy as np
 from flwr.common import Scalar
 from flwr_analytics_server.fedbox import BoxPlotProvider
@@ -38,7 +38,13 @@ def run_two_client_example(_rtol=1e-05, _atol=1e-08) -> None:
     #
     # Aggregation for global histogram
     #
-    provider = BoxPlotProvider(hrange=(17.0, 24.0))
+    provider = BoxPlotProvider()
+    args = argparse.Namespace()
+    args.nbins = 100
+    args.hmin = 17.0
+    args.hmax = 24.0
+    provider.set_arguments(args)
+
     provider.add_client_data({
         "counts": _numpy_to_scalar(client_0_histogram[0]),
         "bins": _numpy_to_scalar(client_0_histogram[1]),
@@ -51,7 +57,7 @@ def run_two_client_example(_rtol=1e-05, _atol=1e-08) -> None:
     provider.aggregate()
     fivenum = provider._result
     _fivenum = [fivenum.minimum, fivenum.quartile_first, fivenum.median, fivenum.quartile_third, fivenum.maximum]
-    _fivenum_precomputed = [17.0, 17.21, 17.91, 19.03,24.0]
+    _fivenum_precomputed = [17.0, 17.21, 17.91, 19.03, 24.0]
     #
     # Assertion
     #

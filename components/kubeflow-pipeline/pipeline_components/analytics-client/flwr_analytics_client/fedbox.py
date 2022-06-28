@@ -1,4 +1,7 @@
 from fedhist import HistogramProvider
 
 class BoxPlotProvider(HistogramProvider):
-    pass
+
+    @property
+    def name(self) -> str:
+        return "boxplot"
