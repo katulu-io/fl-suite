@@ -3,41 +3,21 @@ import json
 from argparse import ArgumentParser, Namespace
 from typing import Dict, List, Tuple
 from .fivenum import compute_fivesum, FiveNum
-from .fedhist import aggregate_histograms, HistogramData
+from .fedhist import aggregate_histograms, HistogramProvider, HistogramData
 import matplotlib.pyplot as plt
 import numpy as np
 from flwr.common import Properties, Scalar
 from .provider import AnalyticsProvider, scalar_to_numpy
 
 
-class BoxPlotProvider(AnalyticsProvider):
-    def __init__(self) -> None:
-        self._client_data: List[HistogramData] = []
-        self.nbins = 0
-        self.hrange = (0, 0)
-
-    def client_input_data(self) -> Dict[str, Scalar]:
-        return {
-            "nbins": self.nbins,
-            "hmin": self.hrange[0],
-            "hmax": self.hrange[1],
-        }
-
-    def add_client_data(self, properties: Properties) -> None:
-        self._client_data.append(
-            HistogramData(
-                counts=scalar_to_numpy(properties["counts"]),
-                bins=scalar_to_numpy(properties["bins"]),
-            )
-        )
+class BoxPlotProvider(HistogramProvider):
 
     def aggregate(self) -> None:
+
+        super().aggregate()
+        histogram = self._result
         client_input = self.client_input_data()
-        hmin = client_input['hmin']
-        hmax = client_input['hmax']
-        histogram=aggregate_histograms(self._client_data)
-        fn = compute_fivesum(hmin, hmax, histogram)
-        self._result = fn
+        self._result = compute_fivesum(client_input['hmin'], client_input['hmax'], histogram)
 
     def result_metadata_json(self) -> str:
 
@@ -74,27 +54,6 @@ class BoxPlotProvider(AnalyticsProvider):
         }
 
         return json.dumps(metadata)
-
-    def add_arguments(self, parser: ArgumentParser) -> None:
-        parser.add_argument(
-            "--nbins",
-            type=int,
-            required=True,
-        )
-        parser.add_argument(
-            "--hmin",
-            type=float,
-            required=True,
-        )
-        parser.add_argument(
-            "--hmax",
-            type=float,
-            required=True,
-        )
-
-    def set_arguments(self, args: Namespace) -> None:
-        self.nbins = args.nbins
-        self.hrange = (args.hmin, args.hmax)
 
     @property
     def name(self) -> str:
