@@ -1,11 +1,8 @@
 import io
 import json
-from argparse import ArgumentParser, Namespace
-from typing import Dict, List, Tuple
 from .fivenum import compute_fivesum, FiveNum
-from .fedhist import aggregate_histograms, HistogramProvider, HistogramData
-from flwr.common import Properties, Scalar
-from .provider import AnalyticsProvider, scalar_to_numpy
+from .fedhist import HistogramProvider
+import matplotlib.pyplot as plt
 
 
 class BoxPlotProvider(HistogramProvider):
