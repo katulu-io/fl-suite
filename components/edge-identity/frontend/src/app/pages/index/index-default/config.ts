@@ -11,6 +11,13 @@ const actionsCol: TableColumn = {
   matColumnDef: 'actions',
   value: new ActionListValue([
     new ActionIconValue({
+      name: 'show',
+      tooltip: $localize`Show`,
+      color: 'info',
+      field: 'showAction',
+      iconReady: 'material:info',
+    }),
+    new ActionIconValue({
       name: 'delete',
       tooltip: $localize`Delete Edge`,
       color: 'warn',

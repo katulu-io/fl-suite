@@ -18,6 +18,7 @@ import {
 
 import { IndexComponent } from './pages/index/index.component';
 import { FormDefaultComponent } from './pages/form/form-default/form-default.component';
+import { DetailDialogComponent } from './pages/detail-dialog/detail-dialog.component';
 import { IndexDefaultComponent } from './pages/index/index-default/index-default.component';
 
 import { HttpClientModule, HttpClient } from '@angular/common/http';
@@ -27,6 +28,7 @@ import { HttpClientModule, HttpClient } from '@angular/common/http';
     AppComponent,
     IndexComponent,
     FormDefaultComponent,
+    DetailDialogComponent,
     IndexDefaultComponent,
   ],
   imports: [

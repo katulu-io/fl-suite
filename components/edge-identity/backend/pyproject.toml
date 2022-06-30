@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "edge-identity-backend"
-version = "0.0.0+dev.9366134"
+version = "0.0.0+dev.1655902577"
 description = ""
 authors = ["Katulu <eng@katulu.io>"]
 license = "Apache v2.0"
@@ -12,10 +12,12 @@ python = "^3.9"
 #          PR: https://github.com/python-poetry/poetry/pull/5172
 kubeflow = { path = "../../vendor/kubeflow/components/crud-web-apps/common/backend/" }
 gunicorn = "^20.1.0"
+grpcio = "^1.46.3"
 
 [tool.poetry.dev-dependencies]
 black = "^22.3.0"
 pylint = "^2.14.1"
+grpcio-tools = "^1.46.3"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

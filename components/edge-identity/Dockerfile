@@ -59,6 +59,7 @@ COPY ./vendor/kubeflow /vendor/kubeflow
 
 RUN poetry install
 
+COPY ./edge-identity/backend/spire/ ./spire
 COPY ./edge-identity/backend/apps/ ./apps
 COPY ./edge-identity/backend/entrypoint.py .
 

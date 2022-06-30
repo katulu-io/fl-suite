@@ -16,6 +16,7 @@ def delete_edge(edge_name, namespace):
     # TODO: Refactor into model
     db_connection = get_db()
     cur = db_connection.cursor()
+    cur.execute("PRAGMA foreign_keys = ON")
     sql = "DELETE FROM Edge WHERE name = ? and namespace = ?"
     cur.execute(sql, (edge_name, namespace))
     db_connection.commit()

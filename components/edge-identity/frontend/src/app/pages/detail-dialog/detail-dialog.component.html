@@ -1,0 +1,22 @@
+<div class="form--container" mat-dialog-content>
+  <form novalidate>
+    <lib-form-section
+      title="Edge: {{ edge.name }}"
+      text="Copy and deploy the following CRD into your FL-Edge"
+      icon="fa:fas:cogs"
+      i18n-title
+      i18n-text
+    >
+    </lib-form-section>
+
+    <pre style="background-color: #f1f1f1; padding: 10px">{{ crdText }}</pre>
+
+    <button mat-raised-button type="button" class="form--button-margin" (click)="onCancel()" i18n>
+      CLOSE
+    </button>
+
+    <button mat-raised-button type="button" color="primary" (click)="onCopy()" i18n>
+      COPY
+    </button>
+  </form>
+</div>

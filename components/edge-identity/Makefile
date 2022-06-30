@@ -25,17 +25,20 @@ dependencies: ${POETRY_STAMP}
 backend/edge-identity.db: ${POETRY_STAMP} backend/apps/default/schema.sql
 	@cd backend/ && FLASK_APP=apps.default poetry run flask init-db
 
-dist:
+dist: manifests
 	@cd backend/ && \
 		poetry version ${PIP_VERSION}
 
 	# Using ../ as docker context to be able to retrieve the components/vendor/kubeflow for the common backend/frontend code
 	DOCKER_BUILDKIT=1 docker build -t ${IMAGE_URL} -f Dockerfile ..
+.PHONY: dist
 
+manifests:
 	@cd kustomize/base/ && \
 		cp kustomization.tpl.yaml kustomization.yaml && \
 		kustomize edit set image ${IMAGE_NAME}=${IMAGE_URL}
-.PHONY: dist
+.PHONY: manifests
+
 
 run: ${POETRY_STAMP} backend/edge-identity.db
 	@cd backend/ && \
@@ -45,6 +48,15 @@ run: export APP_SECURE_COOKIES = False
 run: export APP_PREFIX = /
 run: export UI_FLAVOR = default
 .PHONY: run
+
+spire-sdk:
+	@cd backend/ && \
+		poetry run python -m grpc_tools.protoc \
+			--python_out=. --grpc_python_out=. \
+			-I ../../vendor/spire-api-sdk/proto/ \
+			../../vendor/spire-api-sdk/proto/spire/api/server/agent/v1/agent.proto \
+			../../vendor/spire-api-sdk/proto/spire/api/types/*.proto
+.PHONY: spire-sdk
 
 push:
 	docker push ${IMAGE_URL}

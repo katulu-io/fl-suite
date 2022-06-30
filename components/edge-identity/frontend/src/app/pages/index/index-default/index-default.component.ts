@@ -19,6 +19,7 @@ import { EdgeResponseObject, EdgeProcessedObject } from 'src/app/types';
 import { Subscription, Observable, Subject } from 'rxjs';
 import { isEqual } from 'lodash';
 import { FormDefaultComponent } from '../../form/form-default/form-default.component';
+import { DetailDialogComponent } from '../../detail-dialog/detail-dialog.component'
 
 @Component({
   selector: 'app-index-default',
@@ -84,6 +85,9 @@ export class IndexDefaultComponent implements OnInit {
       case 'delete':
         this.deleteVolumeClicked(a.data);
         break;
+      case 'show':
+        this.showEdge(a.data);
+        break;
     }
   }
 
@@ -94,15 +98,30 @@ export class IndexDefaultComponent implements OnInit {
       panelClass: 'form--dialog-padding',
     });
 
-    ref.afterClosed().subscribe(res => {
-      if (res === DIALOG_RESP.ACCEPT) {
+    ref.afterClosed().subscribe((newEdge: EdgeResponseObject|DIALOG_RESP) => {
+      // If newEdge was created successufully and response object is returned
+      if (newEdge !== DIALOG_RESP.CANCEL) {
         this.snackBar.open(
-          $localize`Volume was submitted successfully.`,
+          $localize`Edge created successfully.`,
           SnackType.Success,
           2000,
         );
         this.poller.reset();
+
+        const detailDialog = this.dialog.open(DetailDialogComponent, {
+          width: '600px',
+          panelClass: 'form--dialog-padding',
+          data: newEdge
+        });
       }
+    });
+  }
+
+  public showEdge(edge: EdgeProcessedObject) {
+    const ref = this.dialog.open(DetailDialogComponent, {
+      width: '600px',
+      panelClass: 'form--dialog-padding',
+      data: edge
     });
   }
 
@@ -146,6 +165,7 @@ export class IndexDefaultComponent implements OnInit {
 
     for (const edge of edgesCopy) {
       edge.deleteAction = STATUS_TYPE.READY;
+      edge.showAction = STATUS_TYPE.READY;
     }
 
     return edgesCopy;

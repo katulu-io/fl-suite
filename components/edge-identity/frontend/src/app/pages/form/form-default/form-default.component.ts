@@ -9,13 +9,15 @@ import {
 import { Subscription } from 'rxjs';
 import {
   NamespaceService,
+  DialogConfig,
+  ConfirmDialogService,
   getExistingNameValidator,
   dns1035Validator,
   getNameError,
   DIALOG_RESP,
 } from 'kubeflow';
 import { EdgeIdentityBackendService } from 'src/app/services/backend.service';
-import { EdgePostObject } from 'src/app/types';
+import { EdgePostObject, EdgePostResponseObject } from 'src/app/types';
 import { MatDialogRef } from '@angular/material/dialog';
 
 @Component({
@@ -38,6 +40,7 @@ export class FormDefaultComponent implements OnInit, OnDestroy {
     public fb: FormBuilder,
     public backend: EdgeIdentityBackendService,
     public dialog: MatDialogRef<FormDefaultComponent>,
+    public confirmDialog: ConfirmDialogService,
   ) {
     this.formCtrl = this.fb.group({
       type: ['empty', [Validators.required]],
@@ -74,8 +77,8 @@ export class FormDefaultComponent implements OnInit, OnDestroy {
     this.blockSubmit = true;
 
     this.backend.createEdge(this.currNamespace, newEdge).subscribe(
-      result => {
-        this.dialog.close(DIALOG_RESP.ACCEPT);
+      (response: EdgePostResponseObject) => {
+        this.dialog.close(response.edge);
       },
       error => {
         this.blockSubmit = false;

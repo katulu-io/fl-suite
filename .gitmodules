@@ -4,3 +4,6 @@
 [submodule "components/vendor/kubeflow"]
 	path = components/vendor/kubeflow
 	url = https://github.com/kubeflow/kubeflow.git
+[submodule "components/vendor/spire-api-sdk"]
+	path = components/vendor/spire-api-sdk
+	url = https://github.com/spiffe/spire-api-sdk.git

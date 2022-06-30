@@ -3,7 +3,7 @@ import { BackendService, SnackBarService } from 'kubeflow';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-import { EdgeResponseObject, EdgeListBackendResponse, EdgePostObject } from '../types';
+import { EdgeResponseObject, EdgeListBackendResponse, EdgePostObject, EdgePostResponseObject } from '../types';
 
 @Injectable({
   providedIn: 'root',
@@ -33,11 +33,11 @@ export class EdgeIdentityBackendService extends BackendService {
       .pipe(catchError(error => this.handleError(error)));
   }
 
-  public createEdge(namespace: string, edge: EdgePostObject) {
+  public createEdge(namespace: string, edge: EdgePostObject): Observable<EdgePostResponseObject> {
     const url = `api/namespaces/${namespace}/edges`;
 
     return this.http
-      .post<EdgeListBackendResponse>(url, edge)
+      .post<EdgePostResponseObject>(url, edge)
       .pipe(catchError(error => this.handleError(error)));
   }
 

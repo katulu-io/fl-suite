@@ -37,6 +37,7 @@ resources:
   # User namespace
   - ../../../components/kubeflow-profile/kustomize
   # Edges Web app
+  # The edge-identity manifests deploy spire-server. This is because the edge-identity needs to live along side the spire-server container to get admin access
   - ../../../components/edge-identity/kustomize/overlays/istio
 
   # Container registry
@@ -44,7 +45,6 @@ resources:
 
   # Spire
   - ../../../components/spire/kustomize/spire-namespace
-  - ../../../components/spire/kustomize/spire-server
   - ../../../components/spire/kustomize/spire-agent
 
   - ../../../components/kubeflow-notebooks/kustomize

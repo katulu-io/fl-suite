@@ -9,12 +9,18 @@ export interface EdgeResponseObject {
   namespace: string;
   status: Status;
   age: string;
+  join_token: string;
 }
 
 export interface EdgeProcessedObject extends EdgeResponseObject {
   deleteAction?: string;
+  showAction?: string;
 }
 
 export interface EdgePostObject {
   name: string;
+}
+
+export interface EdgePostResponseObject {
+  edge: EdgeResponseObject;
 }
