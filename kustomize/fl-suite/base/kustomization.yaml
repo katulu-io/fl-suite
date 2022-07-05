@@ -49,3 +49,26 @@ resources:
   - ../../../components/kubeflow-pipeline/kustomize
   - ../../../components/fl-orchestrator
   - ../../../components/client-image-builder/kustomize
+
+patches:
+  # This patch (kustomize patch) is here to use mysql 8.0 which prevents really
+  # high memory usage (https://github.com/docker-library/mysql/issues/579) in
+  # environments with nofile set to infinity or too high. This patch can be
+  # discarded once https://github.com/kubeflow/pipelines/pull/5946 is merged
+  # into kubeflow.
+  - patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/image
+        value: gcr.io/ml-pipeline/mysql:8.0
+      - op: replace
+        path: /spec/template/spec/containers/0/args
+        value:
+          - --default-authentication-plugin=mysql_native_password
+          - --datadir
+          - /var/lib/mysql
+    target:
+      name: mysql
+      namespace: kubeflow
+      kind: Deployment
+      group: apps
+      version: v1
