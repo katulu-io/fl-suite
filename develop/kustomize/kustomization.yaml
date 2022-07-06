@@ -3,12 +3,23 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-  - ../../components/fl-operator/kustomize/samples
+  - ./edge-client-1
+  - ./edge-client-2
   - ../../components/fl-operator
   - ../../kustomize/fl-suite/overlays/standalone
-  - allow-fl-operator-access.yaml
 
 secretGenerator:
+  - name: regcred
+    namespace: edge-client-1
+    type: kubernetes.io/dockerconfigjson
+    files:
+      - .dockerconfigjson=config/internal-registry-credentials.json
+  - name: regcred
+    namespace: edge-client-2
+    type: kubernetes.io/dockerconfigjson
+    files:
+      - .dockerconfigjson=config/internal-registry-credentials.json
+
   - name: internal-registry-credentials
     namespace: katulu-fl
     type: kubernetes.io/dockerconfigjson
@@ -31,31 +42,6 @@ configMapGenerator:
       - agent.conf=config/spire-agent.conf
 
 patches:
-  # In this setup, the FLOperator is running inside the same cluster as the FLOrchestrator, therefore we can
-  # communicate through the istio-ingressgateway directly. But the SNI is needed to do the routing in Istio.
-  - patch: |-
-      ---
-      apiVersion: fl.katulu.io/v1alpha1
-      kind: FlOperator
-      metadata:
-        name: floperator-sample
-        namespace: katulu-fl
-      spec:
-        orchestrator-url: istio-ingressgateway.istio-system
-        orchestrator-sni: fl-orchestrator.fl-suite
-        orchestrator-port: 443
-
-  # The fl-operator needs a (istio) sidecar to get access to the fl-operator-envoyproxy running in the katulu-fl ns.
-  # The allow-fl-operator-access (istio) authorization policy is required to grant the access
-  - patch: |-
-      ---
-      apiVersion: v1
-      kind: Namespace
-      metadata:
-        name: fl-operator-system
-        labels:
-          istio-injection: enabled
-
   # Set the container-registry to listen to self container-name: local.fl-suite-control-plane
   - patch: |-
       - op: replace
