@@ -1,0 +1,63 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jupyter-notebook
+  labels:
+    app: jupyter-notebook
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jupyter-notebook
+  template:
+    metadata:
+      labels:
+        app: jupyter-notebook
+    spec:
+      serviceAccountName: fl-notebook
+      containers:
+        - env:
+          - name: NB_PREFIX
+            value: /jupyter
+          - name: KF_PIPELINES_SA_TOKEN_PATH
+            value: /var/run/secrets/kubeflow/pipelines/token
+          image: katulu-fl-jupyter-full
+          imagePullPolicy: IfNotPresent
+          name: katulu-fl-jupyter-full
+          ports:
+            - containerPort: 8888
+              name: notebook-port
+              protocol: TCP
+          resources:
+            limits:
+              cpu: 600m
+              memory: 1Gi
+            requests:
+              cpu: 500m
+              memory: 1Gi
+          workingDir: /home/jovyan
+          volumeMounts:
+              - mountPath: /var/run/secrets/kubeflow/pipelines
+                name: volume-kf-pipeline-token
+                readOnly: true
+              - name: minio-credentials
+                mountPath: /minio
+                readOnly: true
+              - mountPath: /home/jovyan
+                name: workspace
+      volumes:
+        - name: workspace
+          persistentVolumeClaim:
+            claimName: jupyter-notebook-workspace
+        - name: volume-kf-pipeline-token
+          projected:
+            sources:
+              - serviceAccountToken:
+                  path: token
+                  expirationSeconds: 7200
+                  audience: pipelines.kubeflow.org
+        - name: minio-credentials
+          secret:
+            secretName: mlpipeline-minio-artifact
+            optional: false

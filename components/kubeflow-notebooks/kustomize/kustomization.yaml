@@ -4,6 +4,9 @@ kind: Kustomization
 namespace: katulu-fl
 
 resources:
-  - allow-pipeline-access.yaml
   - rolebinding.yaml
   - serviceaccount.yaml
+  - pv-claim.yaml
+  - deployment.yaml
+  - service.yaml
+  - virtualservice.yaml

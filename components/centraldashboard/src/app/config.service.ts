@@ -1,24 +1,12 @@
 import { Injectable } from '@angular/core';
 
 const APPS = [
-  { path: '_/jupyter', location: '/jupyter/', label: 'Notebooks', icon: 'book' },
+  { path: '_/jupyter', location: '/jupyter/', label: 'Notebook', icon: 'book' },
   {
     path: '_/edges',
     location: '/edges/',
     label: 'Edges',
     icon: 'developer_board',
-  },
-  {
-    path: '_/volumes',
-    location: '/volumes/',
-    label: 'Volumes',
-    icon: 'storage',
-  },
-  {
-    path: '_/models',
-    location: '/models/',
-    label: 'Models',
-    icon: 'widgets',
   },
   {
     label: 'Experiments (KFP)',
