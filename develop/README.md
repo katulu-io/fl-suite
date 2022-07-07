@@ -78,7 +78,11 @@ kubectl get pods -n kubeflow
 kubectl get pods -n katulu-fl
 kubectl get pods -n spire
 kubectl get pods -n container-registry
+kubectl get pods -n edge-client-1
+kubectl get pods -n edge-client-2
 ```
+
+The local-cluster hosts 2 edge clients used to be able to test end-to-end a federated learning run, e.g running the [quickstart](../docs/quickstart.md)
 
 ### 5. Login to the fl-suite central dashboard
 
