@@ -2,8 +2,7 @@
 apiVersion: fl.katulu.io/v1alpha1
 kind: FlOperator
 metadata:
-  name: edge-client-2
-  namespace: edge-client-2
+  name: floperator
 spec:
   orchestrator-url: istio-ingressgateway.istio-system
   orchestrator-sni: fl-orchestrator.fl-suite

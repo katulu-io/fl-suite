@@ -8,7 +8,7 @@ const semanticRelease = require("semantic-release");
         plugins: ["@semantic-release/commit-analyzer", "@semantic-release/release-notes-generator"],
         prepare: [
           { path: "./.release/src/kustomize.js", dir: "./kustomize/fl-suite/overlays/standalone", out: "./dist/fl-suite-${nextRelease.version}.tgz" },
-          { path: "./.release/src/kustomize.js", dir: "./kustomize/fl-edge/base", out: "./dist/fl-edge-${nextRelease.version}.tgz" },
+          { path: "./.release/src/kustomize.js", dir: "./kustomize/fl-edge/overlays/standalone", out: "./dist/fl-edge-${nextRelease.version}.tgz" },
         ],
         publish: [
           {

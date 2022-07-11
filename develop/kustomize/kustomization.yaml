@@ -5,7 +5,7 @@ kind: Kustomization
 resources:
   - ./edge-client-1
   - ./edge-client-2
-  - ../../components/fl-operator
+  - ../../kustomize/fl-operator/base
   - ../../kustomize/fl-suite/overlays/standalone
 
 secretGenerator:
