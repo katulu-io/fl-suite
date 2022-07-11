@@ -51,7 +51,7 @@ Let's create a uniwear federated learning client. The client defines the model, 
 ```python
 @pipelines.fl_client(packages=["tensorflow", "flwr", "pandas", "scikit-learn"])
 def uniwear_client():
-    """ Participating tool wear clients will use different experiments."""
+    """Participating tool wear clients will use different experiments."""
     import flwr as fl
     import tensorflow as tf
     import pandas as pd
@@ -62,54 +62,63 @@ def uniwear_client():
     from sklearn.metrics import mean_absolute_percentage_error
 
     """ Raw-features : Direct sensor data."""
-    feature_names = ['force_z', 'vibration_x', 'vibration_y']
-    label = ['tool_wear']
+    feature_names = ["force_z", "vibration_x", "vibration_y"]
+    label = ["tool_wear"]
     nfeatures = len(feature_names)
 
     """ Nonlinear regression model."""
     model = tf.keras.models.Sequential(
-    [
-        tf.keras.layers.Input(nfeatures),
-        tf.keras.layers.Dense(nfeatures * 2, activation="relu"),
-        tf.keras.layers.Dense(nfeatures * 2, activation="relu"),
-        tf.keras.layers.Dense(1),
-    ]
+        [
+            tf.keras.layers.Input(nfeatures),
+            tf.keras.layers.Dense(nfeatures * 2, activation="relu"),
+            tf.keras.layers.Dense(nfeatures * 2, activation="relu"),
+            tf.keras.layers.Dense(1),
+        ]
     )
     model.compile("adam", "mape", metrics=["mape"])
 
     """ Client data mapping. """
     experiment_maping = {
-                         '0':'c1', '1':'c4', '2':'c6', 
-                         '3':'W1', '4':'W2', '5':'W3', 
-                         '6':'W4', '7':'W5', '8':'W6',
-                         '9':'W7','10':'W8', '11':'W9'
-                        } 
+        "0": "c1",
+        "1": "c4",
+        "2": "c6",
+        "3": "W1",
+        "4": "W2",
+        "5": "W3",
+        "6": "W4",
+        "7": "W5",
+        "8": "W6",
+        "9": "W7",
+        "10": "W8",
+        "11": "W9",
+    }
     subset_id = str(np.random.randint(0, 11))
 
     """ Uniwear Katulu's public dataset : Pull from the repo https://github.com/katulu-io/uniwear-dataset """
-    uniwear_url = 'https://raw.githubusercontent.com/katulu-io/uniwear-dataset/main/data/uniwear.csv'
+    uniwear_url = "https://raw.githubusercontent.com/katulu-io/uniwear-dataset/main/data/uniwear.csv"
     df_uniwear = pd.read_csv(uniwear_url)
 
     """ Different experimental data is selected from uniwear dataset randomly."""
     experiment_tag = experiment_maping[subset_id]
-    df_client = df_uniwear[df_uniwear['experiment_tag'] == experiment_tag].copy()
+    df_client = df_uniwear[df_uniwear["experiment_tag"] == experiment_tag].copy()
 
     """ Shuffle experiment data for regression."""
     df = df_client.sample(frac=1.0, random_state=4242)
 
     """ Split for test/train and scale locally. """
     X = df[feature_names]
-    y = df['tool_wear']
+    y = df["tool_wear"]
     x_train0, x_test0, y_train, y_test = train_test_split(
-    X, y.to_numpy(), test_size=0.33)
+        X, y.to_numpy(), test_size=0.33
+    )
     scaler = MinMaxScaler()
     scaler.fit(x_train0)
     x_train = scaler.transform(x_train0)
     x_test = scaler.transform(x_test0)
 
     """ Prepare Flower client class."""
-    class UniWearClient(fl.client.NumPyClient):
 
+    class UniWearClient(fl.client.NumPyClient):
         def get_parameters(self):
             return model.get_weights()
 
@@ -124,15 +133,12 @@ def uniwear_client():
             return loss, len(x_val), {"accuracy": mape}
 
     fl.client.start_numpy_client("localhost:9080", client=UniWearClient())
-
 ```
 
 Now, we can trigger the federated learning pipeline.
 
 ```python
-pipelines.run(uniwear_client, 
-              registry='localhost:5000',
-              verify_registry_tls=False)
+pipelines.run(uniwear_client)
 ```
 
 A resulting pipeline screenshot. 
