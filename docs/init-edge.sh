@@ -55,10 +55,6 @@ nodes:
   - role: control-plane
     # Using the same kubernetes version as the cluster deployed in the example
     image: kindest/node:v1.21.10@sha256:84709f09756ba4f863769bdcabe5edafc2ada72d3c8c44d6515fc581b66b029c
-    extraMounts:
-      - hostPath: ./dataset
-        containerPath: /dataset
-        readOnly: true
 containerdConfigPatches:
 - |-
   [plugins."io.containerd.grpc.v1.cri".registry.mirrors."$CONTAINER_REGISTRY_FQDN:8080"]

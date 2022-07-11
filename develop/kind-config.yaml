@@ -17,9 +17,3 @@ nodes:
         hostPort: 80
       - containerPort: 30443
         hostPort: 443
-    # TODO: Remove this extra mount. The FLOperator pods expect a /dataset directory in the kubernetes node. To
-    # force-create one we let kind do it
-    extraMounts:
-      - hostPath: dataset/
-        containerPath: /dataset
-        readOnly: true

@@ -70,15 +70,7 @@ func NewPod(task *pb.OrchestratorMessage_TaskSpec, name types.NamespacedName, en
 				{
 					Name:            "flower-client",
 					Image:           task.Executor.GetOciExecutor().Image,
-					Args:            []string{"/dataset", "0", "localhost:9080"},
 					ImagePullPolicy: corev1.PullIfNotPresent,
-					VolumeMounts: []corev1.VolumeMount{
-						{
-							Name:      "flower-client-dataset",
-							MountPath: "/dataset",
-							ReadOnly:  true,
-						},
-					},
 				},
 				{
 					Name:            "envoyproxy",
@@ -126,15 +118,6 @@ func NewPod(task *pb.OrchestratorMessage_TaskSpec, name types.NamespacedName, en
 						HostPath: &corev1.HostPathVolumeSource{
 							Path: "/run/spire/sockets",
 							Type: utils.HostPathTypePtr(corev1.HostPathDirectoryOrCreate),
-						},
-					},
-				},
-				{
-					Name: "flower-client-dataset",
-					VolumeSource: corev1.VolumeSource{
-						HostPath: &corev1.HostPathVolumeSource{
-							Path: "/dataset",
-							Type: utils.HostPathTypePtr(corev1.HostPathDirectory),
 						},
 					},
 				},
