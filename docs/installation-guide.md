@@ -112,7 +112,7 @@ You can now open your browser and visit http://localhost:8080/. You should get t
 
 <br />
 
-![](../images/fl-suite-notebooks.png)
+![](../images/fl-suite-notebook.png)
 
 <br />
 

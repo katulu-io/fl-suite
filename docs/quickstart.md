@@ -19,19 +19,9 @@ To do that, we need to describe how a Federated Learning client will train and t
 
 At least two edge clients need to be connected to FL Suite before running these steps, as documented in the [installation guide](./installation-guide.md).
 
-## Starting a new notebook
-
-First, we create a new notebook from the "Notebooks" section in FL Suite. The new notebook needs to use the custom Jupyter image `ghcr.io/katulu-io/fl-suite/katulu-fl-jupyter-full:1.0.0-beta.3` to have all necessary packages available.
-
-![](../images/new-notebook-custom-image.png)
-
-Furthermore, the "Allow access to Kubeflow Pipelines" configuration has to be enabled.
-
-![](../images/new-notebook-configurations.png)
-
-With this notebook launched, we can prepare a new document there.
-
 ## Preparing and running the pipeline
+
+Following up from the [installation guide](./installation-guide.md) a fl-suite jupyter notebook will be accessible at: http://localhost:8080. The next steps will use such notebook to start an FL pipeline.
 
 We start by importing the necessary package:
 
