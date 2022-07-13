@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "edge-identity-backend"
+version = "0.0.0+dev.1655902577"
+description = ""
+authors = ["Katulu <eng@katulu.io>"]
+license = "Apache v2.0"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+# Using a git-submodule to work around Poetry not supporting git subdirectories to install dependencies:
+# Relevant Issue: https://github.com/python-poetry/poetry/issues/755
+#          PR: https://github.com/python-poetry/poetry/pull/5172
+kubeflow = { path = "../../vendor/kubeflow/components/crud-web-apps/common/backend/" }
+gunicorn = "^20.1.0"
+grpcio = "^1.46.3"
+
+[tool.poetry.dev-dependencies]
+black = "^22.3.0"
+pylint = "^2.14.1"
+grpcio-tools = "^1.46.3"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

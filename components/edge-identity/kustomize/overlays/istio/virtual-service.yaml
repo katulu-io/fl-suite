@@ -1,0 +1,27 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: edge-identity-virtual-service
+  labels:
+    app: edge-identity
+    kustomize.component: edge-identity
+spec:
+  gateways:
+  - kubeflow/kubeflow-gateway
+  hosts:
+  - '*'
+  http:
+  - headers:
+      request:
+        add:
+          x-forwarded-prefix: /edges
+    match:
+    - uri:
+        prefix: /edges/
+    rewrite:
+      uri: /
+    route:
+    - destination:
+        host: edge-identity-service.spire.svc.cluster.local
+        port:
+          number: 80

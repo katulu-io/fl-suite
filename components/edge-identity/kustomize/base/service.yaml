@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: edge-identity
+    kustomize.component: edge-identity
+  name: edge-identity-service
+spec:
+  selector:
+    app: spire-server
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 5000
+  type: ClusterIP

@@ -1,0 +1,37 @@
+<div class="form--container" mat-dialog-content>
+  <form novalidate (ngSubmit)="onSubmit()" [formGroup]="formCtrl">
+    <lib-form-section
+      title="New Edge"
+      text="Create a new Edge."
+      icon="fa:fas:microchip"
+      i18n-title
+      i18n-text
+    >
+    </lib-form-section>
+
+    <!--Name / Namespace-->
+    <lib-form-name-namespace-inputs
+      [nameControl]="formCtrl.get('name')"
+      [namespaceControl]="formCtrl.get('namespace')"
+      resourceName="Edge"
+      i18n-resourceName
+      [existingNames]="edgeNames"
+    >
+    </lib-form-name-namespace-inputs>
+
+    <button
+      mat-raised-button
+      color="primary"
+      class="form--button-margin"
+      type="submit"
+      [disabled]="!formCtrl.valid || blockSubmit"
+      i18n
+    >
+      CREATE
+    </button>
+
+    <button mat-raised-button type="button" (click)="onCancel()" i18n>
+      CANCEL
+    </button>
+  </form>
+</div>

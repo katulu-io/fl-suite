@@ -22,7 +22,7 @@ commitlint:
 .PHONY: commitlint
 
 dockerlint:
-	@find . -maxdepth 5 -type f -name Dockerfile | xargs -I {} hadolint {}
+	@find . -maxdepth 5 -type f -name Dockerfile ! -path "*/vendor/*" | xargs -I {} hadolint {}
 .PHONY: dockerlint
 
 LINTTARGETS = $(SUBDIRS:%=lint--%)

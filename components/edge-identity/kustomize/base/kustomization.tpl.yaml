@@ -1,0 +1,44 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- ../../../spire/kustomize/spire-server
+- cluster-role.yaml
+- cluster-role-binding.yaml
+- service-account.yaml
+- service.yaml
+
+patches:
+  # The edge-identity container is expected to run inside the same pod as the spire-server.
+  # This is to allow the edge-identity to act as an spire-server admin (join token creation).
+  - patch: |-
+      - op: add
+        path: /spec/template/spec/containers/2
+        value:
+          name: edges-web-app
+          image: edge-identity
+          ports:
+            - containerPort: 5000
+          env:
+            - name: APP_PREFIX
+              value: /edges
+            - name: USERID_HEADER
+              value: kubeflow-userid
+            - name: USERID_PREFIX
+              value: ""
+          volumeMounts:
+            - name: spire-registration-socket
+              mountPath: /tmp
+              readOnly: false
+    target:
+      group: apps
+      version: v1
+      kind: StatefulSet
+      name: spire-server
+      namespace: spire
+
+configMapGenerator:
+  - name: envoyproxy
+    files:
+      - config/envoy.yaml
+
+namespace: spire
