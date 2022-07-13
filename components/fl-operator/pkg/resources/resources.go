@@ -52,6 +52,7 @@ func RenderEnvoyproxyConfig(context EnvoyConfigContext, envoyConfigFile string) 
 
 // Creates new pod for the flower-client
 func NewPod(task *pb.OrchestratorMessage_TaskSpec, name types.NamespacedName, envoyConfigName string) *corev1.Pod {
+	shareProcessNamespace := true
 	labels := map[string]string{
 		FlClientDeploymentLabelKey: FlClientDeploymentLabelValue,
 		"run-id":                   string(task.ID),
@@ -66,11 +67,19 @@ func NewPod(task *pb.OrchestratorMessage_TaskSpec, name types.NamespacedName, en
 			Labels:    labels,
 		},
 		Spec: corev1.PodSpec{
+			// For the flower-client to pkill the envoyproxy as below instructed, the containers need to share the same
+			// process namespace.
+			ShareProcessNamespace: &shareProcessNamespace,
 			Containers: []corev1.Container{
 				{
 					Name:            "flower-client",
 					Image:           task.Executor.GetOciExecutor().Image,
 					ImagePullPolicy: corev1.PullIfNotPresent,
+					Command:         []string{"/bin/bash", "-c"},
+					// Assuming all flower-clients run with: python /app/main.py
+					// "pkill envoy" is needed to kill the envoyproxy once the flower-client finishes the fl-run and the
+					// the pod is marked as completed.
+					Args: []string{"python /app/main.py && pkill envoy"},
 				},
 				{
 					Name:            "envoyproxy",
