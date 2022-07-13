@@ -101,6 +101,9 @@ func NewPod(task *pb.OrchestratorMessage_TaskSpec, name types.NamespacedName, en
 					},
 				},
 			},
+			// RestartPolicy: OnFailure is preferred because it allows the pod to fail on transitive errors
+			// (e.g flower-client's envoyproxy not ready which causes it to crash)
+			RestartPolicy: "OnFailure",
 			Volumes: []corev1.Volume{
 				{
 					Name: envoyConfigVolumeKey,
