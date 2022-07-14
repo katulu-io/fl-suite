@@ -1,7 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-- kustomize/default
+- config/default
 commonLabels:
   app: fl-operator
   app.kubernetes.io/component: fl-operator
