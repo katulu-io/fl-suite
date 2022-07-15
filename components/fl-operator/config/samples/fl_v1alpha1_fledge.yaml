@@ -1,0 +1,6 @@
+apiVersion: fl.katulu.io/v1alpha1
+kind: FlEdge
+metadata:
+  name: fledge-sample
+spec:
+  # TODO(user): Add fields here
