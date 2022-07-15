@@ -48,8 +48,8 @@ bin/setup-envtest:
 .PHONY: manifests
 manifests: bin/controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
 	PATH="$(GOBIN):$(PATH)" controller-gen rbac:roleName=manager-role crd webhook paths="./..." \
-		output:crd:artifacts:config=kustomize/crd/bases \
-		output:rbac:artifacts:config=kustomize/rbac
+		output:crd:artifacts:config=config/crd/bases \
+		output:rbac:artifacts:config=config/rbac
 
 .PHONY: generate
 generate: bin/controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
@@ -63,7 +63,7 @@ test: bin/setup-envtest ## Run tests.
 
 .PHONY: build
 build: generate ## Build manager binary.
-	CGO_ENABLED=0 go build -o bin/manager ./cmd/manager
+	CGO_ENABLED=0 go build -o bin/manager main.go
 
 .PHONY: run
 run:
