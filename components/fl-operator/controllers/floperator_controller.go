@@ -151,29 +151,6 @@ func (r *FlOperatorReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		}, err
 	}
 
-	// Then cleanup the running clients that don't have
-	// a matching task in the response
-	for _, pod := range podsList.Items {
-		clientRunning := false
-
-		for _, task := range tasks {
-			if pod.Name == getPodName(task) {
-				clientRunning = true
-				break
-			}
-		}
-
-		if !clientRunning {
-			log.Info(fmt.Sprintf("Cleaning up pod: %s", pod.ObjectMeta.Name))
-
-			err = r.Delete(ctx, &pod)
-			if err != nil {
-				log.Error(err, "Couldn't delete pod resource")
-				continue
-			}
-		}
-	}
-
 	for _, task := range tasks {
 		log.Info(fmt.Sprintf("Found run ID: %s", task.ID))
 
