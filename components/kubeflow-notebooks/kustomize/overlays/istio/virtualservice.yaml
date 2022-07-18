@@ -1,0 +1,26 @@
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: jupyter-notebook
+spec:
+  gateways:
+    - kubeflow/kubeflow-gateway
+  hosts:
+    - '*'
+  http:
+    - headers:
+        request:
+          add:
+            x-forwarded-prefix: /jupyter
+      match:
+      - uri:
+          prefix: /jupyter/
+      rewrite:
+        uri: /jupyter/
+
+      route:
+        - destination:
+            host: jupyter-notebook.katulu-fl.svc.cluster.local
+            port:
+              number: 80
