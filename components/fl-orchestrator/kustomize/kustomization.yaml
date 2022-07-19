@@ -5,7 +5,6 @@ namespace: katulu-fl
 
 resources:
   - service-account.yaml
-  - secret.yaml
   - cluster-role-binding.yaml
   - deployment.yaml
   - service.yaml
