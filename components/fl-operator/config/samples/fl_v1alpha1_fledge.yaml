@@ -3,4 +3,10 @@ kind: FlEdge
 metadata:
   name: fledge-sample
 spec:
-  # TODO(user): Add fields here
+  auth:
+    spire:
+      server-address: spire-server.spire.svc.cluster.local
+      server-port: 8081
+      trust-domain: katulu.io
+      join-token: f081a301-cb4d-4457-bd25-cade3145c542
+      skip-kubelet-verification: true

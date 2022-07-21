@@ -25,16 +25,25 @@ import (
 
 // FlEdgeSpec defines the desired state of FlEdge
 type FlEdgeSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+	Auth FlEdgeAuth `json:"auth,omitempty"`
 	// Important: Run "make" to regenerate code after modifying this file
+}
 
-	// Foo is an example field of FlEdge. Edit fledge_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+type FlEdgeAuth struct {
+	Spire *FlEdgeSpireAuth `json:"spire,omitempty"`
+}
+type FlEdgeSpireAuth struct {
+	ServerAddress           string `json:"server-address"`
+	ServerPort              int16  `json:"server-port"`
+	TrustDomain             string `json:"trust-domain"`
+	JoinToken               string `json:"join-token"`
+	SkipKubeletVerification bool   `json:"skip-kubelet-verification,omitempty"`
+	// Important: Run "make" to regenerate code after modifying this file
 }
 
 // FlEdgeStatus defines the observed state of FlEdge
 type FlEdgeStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
+	CurrentConfigMapName string `json:"current-configmap-name,omitempty"`
 	// Important: Run "make" to regenerate code after modifying this file
 }
 

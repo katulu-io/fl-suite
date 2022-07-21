@@ -56,7 +56,7 @@ generate: bin/controller-gen ## Generate code containing DeepCopy, DeepCopyInto,
 	PATH="$(GOBIN):$(PATH)" controller-gen object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
 .PHONY: test
-test: bin/setup-envtest ## Run tests.
+test: manifests generate bin/setup-envtest  ## Run tests.
 	KUBEBUILDER_ASSETS="$(shell $(GOBIN)/setup-envtest use $(ENVTEST_K8S_VERSION) -p path)" go test -v ./... -coverprofile cover.out
 
 ##@ Build
