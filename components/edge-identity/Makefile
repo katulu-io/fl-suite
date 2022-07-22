@@ -55,6 +55,7 @@ spire-sdk:
 			--python_out=. --grpc_python_out=. \
 			-I ../../vendor/spire-api-sdk/proto/ \
 			../../vendor/spire-api-sdk/proto/spire/api/server/agent/v1/agent.proto \
+			../../vendor/spire-api-sdk/proto/spire/api/server/entry/v1/entry.proto \
 			../../vendor/spire-api-sdk/proto/spire/api/types/*.proto
 .PHONY: spire-sdk
 
