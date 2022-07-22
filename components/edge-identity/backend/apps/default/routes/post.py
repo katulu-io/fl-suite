@@ -5,6 +5,7 @@ from flask import request
 from kubeflow.kubeflow.crud_backend import (api, decorators, helpers, logging,
                                             status)
 from spire.api.server.agent.v1 import agent_pb2, agent_pb2_grpc
+from spire.api.types import spiffeid_pb2
 
 from ..db import get_db, query_db
 from . import bp
@@ -27,8 +28,17 @@ def post_edge(namespace):
     with grpc.insecure_channel("unix:///tmp/spire-server/private/api.sock") as channel:
         stub = agent_pb2_grpc.AgentStub(channel)
 
-        join_token_request = agent_pb2.CreateJoinTokenRequest(ttl=600)
+        # TODO: Unhardcode trust_domain
+        edge_spiffeid = spiffeid_pb2.SPIFFEID(
+            trust_domain="katulu.io", path=f"/{edge_name}"
+        )
+        join_token_request = agent_pb2.CreateJoinTokenRequest(
+            ttl=600, agent_id=edge_spiffeid
+        )
         join_token = stub.CreateJoinToken(join_token_request)
+
+        # TODO: Create "spiffe://{trust_domain}/flower-client" and  "spiffe://{trust_domain}/fl-operator entries
+        # TODO: Generate python grpc client to create spiffe entries
 
     db_connection = get_db()
     cur = db_connection.cursor()
