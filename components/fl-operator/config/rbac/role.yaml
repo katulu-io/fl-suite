@@ -56,6 +56,32 @@ rules:
 - apiGroups:
   - fl.katulu.io
   resources:
+  - fledges
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - fl.katulu.io
+  resources:
+  - fledges/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - fl.katulu.io
+  resources:
+  - fledges/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - fl.katulu.io
+  resources:
   - floperators
   verbs:
   - create

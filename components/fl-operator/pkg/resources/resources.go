@@ -50,6 +50,35 @@ func RenderEnvoyproxyConfig(context EnvoyConfigContext, envoyConfigFile string) 
 	return out.String(), nil
 }
 
+func RenderSpireAgentConfig(context SpireAgentConfigContext, envoyConfigFile string) (string, error) {
+	envoyConfigTemplate, err := ioutil.ReadFile(envoyConfigFile)
+	if err != nil {
+		return "", err
+	}
+
+	t, err := template.New("spire-agent").Parse(string(envoyConfigTemplate))
+	if err != nil {
+		return "", err
+	}
+
+	out := &bytes.Buffer{}
+
+	err = t.Execute(out, context)
+	if err != nil {
+		return "", err
+	}
+
+	return out.String(), nil
+}
+
+type SpireAgentConfigContext struct {
+	ServerAddress           string
+	ServerPort              int16
+	TrustDomain             string
+	SkipKubeletVerification string
+	JoinToken               string
+}
+
 // Creates new pod for the flower-client
 func NewPod(task *pb.OrchestratorMessage_TaskSpec, name types.NamespacedName, envoyConfigName string) *corev1.Pod {
 	shareProcessNamespace := true

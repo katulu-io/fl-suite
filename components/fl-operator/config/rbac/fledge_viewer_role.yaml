@@ -1,0 +1,20 @@
+# permissions for end users to view fledges.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: fledge-viewer-role
+rules:
+- apiGroups:
+  - fl.katulu.io
+  resources:
+  - fledges
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - fl.katulu.io
+  resources:
+  - fledges/status
+  verbs:
+  - get

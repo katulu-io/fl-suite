@@ -1,0 +1,24 @@
+# permissions for end users to edit fledges.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: fledge-editor-role
+rules:
+- apiGroups:
+  - fl.katulu.io
+  resources:
+  - fledges
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - fl.katulu.io
+  resources:
+  - fledges/status
+  verbs:
+  - get
