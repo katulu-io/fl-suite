@@ -6,7 +6,7 @@ import (
 	"log"
 	"time"
 
-	pb "github.com/katulu-io/fl-suite/fl-orchestrator/pkg/proto"
+	pb "github.com/katulu-io/fl-suite/fl-orchestrator/pkg/api/fl_orchestrator/v1"
 	"google.golang.org/grpc"
 )
 

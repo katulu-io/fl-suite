@@ -9,12 +9,11 @@ import (
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
-
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
 	"github.com/katulu-io/fl-suite/fl-orchestrator/pkg/client"
-	pb "github.com/katulu-io/fl-suite/fl-orchestrator/pkg/proto"
+	v1api "github.com/katulu-io/fl-suite/fl-orchestrator/pkg/api/fl_orchestrator/v1"
 	"github.com/katulu-io/fl-suite/fl-orchestrator/pkg/server"
 	"github.com/katulu-io/fl-suite/fl-orchestrator/pkg/watcher"
 )
@@ -38,7 +37,7 @@ func main() {
 	var opts []grpc.ServerOption
 
 	grpcServer := grpc.NewServer(opts...)
-	pb.RegisterFlOrchestratorServer(grpcServer, srv)
+	v1api.RegisterFlOrchestratorServer(grpcServer, srv)
 	reflection.Register(grpcServer)
 
 	pollInterval, err := time.ParseDuration(*pollIntervalFlag)

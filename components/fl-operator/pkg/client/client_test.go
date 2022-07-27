@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/katulu-io/fl-suite/fl-operator/pkg/client"
-	pb "github.com/katulu-io/fl-suite/fl-orchestrator/pkg/proto"
+	pb "github.com/katulu-io/fl-suite/fl-orchestrator/pkg/api/fl_orchestrator/v1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc"

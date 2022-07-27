@@ -6,12 +6,11 @@ import (
 	"os"
 	"time"
 
+	"github.com/minio/minio-go/v7"
+
 	"github.com/katulu-io/fl-suite/fl-orchestrator/pkg/client"
 	"github.com/katulu-io/fl-suite/fl-orchestrator/pkg/server"
-
-	pb "github.com/katulu-io/fl-suite/fl-orchestrator/pkg/proto"
-
-	"github.com/minio/minio-go/v7"
+	v1api "github.com/katulu-io/fl-suite/fl-orchestrator/pkg/api/fl_orchestrator/v1"
 )
 
 type Watcher struct {
@@ -48,7 +47,7 @@ func (w *Watcher) Run(ctx context.Context) {
 				log.Println(err)
 			}
 
-			tasks := make([]*pb.OrchestratorMessage_TaskSpec, 0)
+			tasks := make([]*v1api.OrchestratorMessage_TaskSpec, 0)
 			for _, runID := range runIDs {
 				pipelineRun, err := w.Client.GetRun(pollCtx, runID, authToken)
 				if err != nil {
