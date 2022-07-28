@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"time"
 
+	pb "github.com/katulu-io/fl-suite/fl-orchestrator/pkg/api/fl_orchestrator/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	appsv1 "k8s.io/api/apps/v1"
@@ -35,7 +36,6 @@ import (
 	flv1alpha1 "github.com/katulu-io/fl-suite/fl-operator/api/v1alpha1"
 	orchestratorClient "github.com/katulu-io/fl-suite/fl-operator/pkg/client"
 	"github.com/katulu-io/fl-suite/fl-operator/pkg/resources"
-	pb "github.com/katulu-io/fl-suite/fl-orchestrator/pkg/proto"
 )
 
 // FlOperatorReconciler reconciles a FlOperator object

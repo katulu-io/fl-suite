@@ -4,29 +4,29 @@ import (
 	"context"
 	"fmt"
 
-	pb "github.com/katulu-io/fl-suite/fl-orchestrator/pkg/proto"
+	v1api "github.com/katulu-io/fl-suite/fl-orchestrator/pkg/api/fl_orchestrator/v1"
 )
 
 type FlOrchestratorServer struct {
-	pb.UnimplementedFlOrchestratorServer
+	v1api.UnimplementedFlOrchestratorServer
 
-	tasks []*pb.OrchestratorMessage_TaskSpec
+	tasks []*v1api.OrchestratorMessage_TaskSpec
 }
 
 func NewServer() *FlOrchestratorServer {
 	return &FlOrchestratorServer{
-		tasks: make([]*pb.OrchestratorMessage_TaskSpec, 0),
+		tasks: make([]*v1api.OrchestratorMessage_TaskSpec, 0),
 	}
 }
 
-func NewTaskSpec(runID, workflow, sni, image string) *pb.OrchestratorMessage_TaskSpec {
-	return &pb.OrchestratorMessage_TaskSpec{
+func NewTaskSpec(runID, workflow, sni, image string) *v1api.OrchestratorMessage_TaskSpec {
+	return &v1api.OrchestratorMessage_TaskSpec{
 		ID:       runID,
 		Workflow: workflow,
 		SNI:      sni,
-		Executor: &pb.OrchestratorMessage_ExecutorSpec{
-			Executor: &pb.OrchestratorMessage_ExecutorSpec_OciExecutor{
-				OciExecutor: &pb.OrchestratorMessage_ExecutorSpec_OCIExecutorSpec{
+		Executor: &v1api.OrchestratorMessage_ExecutorSpec{
+			Executor: &v1api.OrchestratorMessage_ExecutorSpec_OciExecutor{
+				OciExecutor: &v1api.OrchestratorMessage_ExecutorSpec_OCIExecutorSpec{
 					Image: image,
 				},
 			},
@@ -34,8 +34,8 @@ func NewTaskSpec(runID, workflow, sni, image string) *pb.OrchestratorMessage_Tas
 	}
 }
 
-func (s *FlOrchestratorServer) Join(req *pb.OperatorMessage, stream pb.FlOrchestrator_JoinServer) error {
-	message := &pb.OrchestratorMessage{
+func (s *FlOrchestratorServer) Join(req *v1api.OperatorMessage, stream v1api.FlOrchestrator_JoinServer) error {
+	message := &v1api.OrchestratorMessage{
 		Tasks: s.tasks,
 	}
 
@@ -47,12 +47,12 @@ func (s *FlOrchestratorServer) Join(req *pb.OperatorMessage, stream pb.FlOrchest
 	return nil
 }
 
-func (s *FlOrchestratorServer) GetTasks(ctx context.Context, req *pb.OperatorMessage) (*pb.OrchestratorMessage, error) {
-	return &pb.OrchestratorMessage{
+func (s *FlOrchestratorServer) GetTasks(ctx context.Context, req *v1api.OperatorMessage) (*v1api.OrchestratorMessage, error) {
+	return &v1api.OrchestratorMessage{
 		Tasks: s.tasks,
 	}, nil
 }
 
-func (s *FlOrchestratorServer) SetTasks(tasks []*pb.OrchestratorMessage_TaskSpec) {
+func (s *FlOrchestratorServer) SetTasks(tasks []*v1api.OrchestratorMessage_TaskSpec) {
 	s.tasks = tasks
 }

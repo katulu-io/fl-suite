@@ -5,7 +5,7 @@ import (
 	"html/template"
 	"io/ioutil"
 
-	pb "github.com/katulu-io/fl-suite/fl-orchestrator/pkg/proto"
+	pb "github.com/katulu-io/fl-suite/fl-orchestrator/pkg/api/fl_orchestrator/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
