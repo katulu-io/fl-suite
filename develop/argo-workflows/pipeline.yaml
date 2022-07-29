@@ -1,0 +1,431 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: fl-pipeline-
+  annotations: {pipelines.kubeflow.org/kfp_sdk_version: 1.8.13, pipelines.kubeflow.org/pipeline_compilation_time: '2022-07-28T17:17:36.297324',
+    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"default": "fl-client:2022.7.28-15.17",
+      "name": "image_tag", "optional": true, "type": "String"}, {"default": "3", "name":
+      "num_rounds", "optional": true, "type": "Integer"}, {"default": "1", "name":
+      "num_local_rounds", "optional": true, "type": "Integer"}, {"default": "2", "name":
+      "min_available_clients", "optional": true, "type": "Integer"}, {"default": "2",
+      "name": "min_fit_clients", "optional": true, "type": "Integer"}, {"default":
+      "2", "name": "min_eval_clients", "optional": true, "type": "Integer"}], "name":
+      "Fl pipeline"}'}
+  labels: {pipelines.kubeflow.org/kfp_sdk_version: 1.8.13}
+spec:
+  entrypoint: fl-pipeline
+  templates:
+  - name: cleanup-flower-server-infrastructure
+    container:
+      args: ['kubectl -n katulu-fl delete --ignore-not-found=true virtualservice,svc,cm
+          -l workflows.argoproj.io/workflow={{workflow.name}}']
+      command: [sh, -c]
+      image: gcr.io/cloud-builders/kubectl
+    metadata:
+      labels:
+        pipelines.kubeflow.org/kfp_sdk_version: 1.8.13
+        pipelines.kubeflow.org/pipeline-sdk-type: kfp
+        pipelines.kubeflow.org/enable_caching: "true"
+      annotations: {pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
+          {"args": ["kubectl -n katulu-fl delete --ignore-not-found=true virtualservice,svc,cm
+          -l workflows.argoproj.io/workflow={{workflow.name}}"], "command": ["sh",
+          "-c"], "image": "gcr.io/cloud-builders/kubectl"}}, "name": "Cleanup Flower
+          Server Infrastructure"}', pipelines.kubeflow.org/component_ref: '{}'}
+  - name: exit-handler-1
+    inputs:
+      parameters:
+      - {name: image_tag}
+      - {name: min_available_clients}
+      - {name: min_eval_clients}
+      - {name: min_fit_clients}
+      - {name: num_local_rounds}
+      - {name: num_rounds}
+    dag:
+      tasks:
+      - name: fl-client-image-builder
+        template: fl-client-image-builder
+        dependencies: [prepare-build-context]
+        arguments:
+          parameters:
+          - {name: image_tag, value: '{{inputs.parameters.image_tag}}'}
+          artifacts:
+          - {name: prepare-build-context-build_context_path, from: '{{tasks.prepare-build-context.outputs.artifacts.prepare-build-context-build_context_path}}'}
+      - name: flower-server
+        template: flower-server
+        dependencies: [setup-flower-server-infrastructure]
+        arguments:
+          parameters:
+          - {name: min_available_clients, value: '{{inputs.parameters.min_available_clients}}'}
+          - {name: min_eval_clients, value: '{{inputs.parameters.min_eval_clients}}'}
+          - {name: min_fit_clients, value: '{{inputs.parameters.min_fit_clients}}'}
+          - {name: num_local_rounds, value: '{{inputs.parameters.num_local_rounds}}'}
+          - {name: num_rounds, value: '{{inputs.parameters.num_rounds}}'}
+      - {name: prepare-build-context, template: prepare-build-context}
+      - {name: setup-flower-server-infrastructure, template: setup-flower-server-infrastructure}
+  - name: fl-client-image-builder
+    container:
+      args: []
+      command:
+      - /build.sh
+      - /tmp/inputs/build_context_path/data
+      - '{{inputs.parameters.image_tag}}'
+      - /tmp/outputs/image_url/data
+      - "False"
+      image: localhost:5000/image-builder:0.0.0-dev-9366134
+      resources:
+        limits: {smarter-devices/fuse: '1'}
+        requests: {smarter-devices/fuse: '1'}
+      volumeMounts:
+      - {mountPath: /.docker, name: docker-config}
+    inputs:
+      parameters:
+      - {name: image_tag}
+      artifacts:
+      - {name: prepare-build-context-build_context_path, path: /tmp/inputs/build_context_path/data}
+    outputs:
+      artifacts:
+      - {name: fl-client-image-builder-image_url, path: /tmp/outputs/image_url/data}
+    metadata:
+      labels:
+        katulu/fl-client: flower-client
+        pipelines.kubeflow.org/kfp_sdk_version: 1.8.13
+        pipelines.kubeflow.org/pipeline-sdk-type: kfp
+        pipelines.kubeflow.org/enable_caching: "false"
+      annotations: {pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
+          {"command": ["/build.sh", {"inputPath": "build_context_path"}, {"inputValue":
+          "image_tag"}, {"outputPath": "image_url"}, {"inputValue": "verify_registry_tls"}],
+          "image": "localhost:5000/image-builder:0.0.0-dev-9366134"}}, "inputs": [{"name":
+          "build_context_path", "type": "Directory"}, {"name": "image_tag", "type":
+          "String"}, {"name": "verify_registry_tls", "type": "Boolean"}], "metadata":
+          {"labels": {"katulu/fl-client": "flower-client"}}, "name": "FL Client Image
+          Builder", "outputs": [{"name": "image_url", "type": "Path"}]}', pipelines.kubeflow.org/component_ref: '{}',
+        pipelines.kubeflow.org/arguments.parameters: '{"image_tag": "{{inputs.parameters.image_tag}}",
+          "verify_registry_tls": "False"}'}
+    volumes:
+    - name: docker-config
+      secret:
+        items:
+        - {key: .dockerconfigjson, path: config.json}
+        secretName: internal-registry-credentials
+  - name: fl-pipeline
+    inputs:
+      parameters:
+      - {name: image_tag}
+      - {name: min_available_clients}
+      - {name: min_eval_clients}
+      - {name: min_fit_clients}
+      - {name: num_local_rounds}
+      - {name: num_rounds}
+    dag:
+      tasks:
+      - name: exit-handler-1
+        template: exit-handler-1
+        arguments:
+          parameters:
+          - {name: image_tag, value: '{{inputs.parameters.image_tag}}'}
+          - {name: min_available_clients, value: '{{inputs.parameters.min_available_clients}}'}
+          - {name: min_eval_clients, value: '{{inputs.parameters.min_eval_clients}}'}
+          - {name: min_fit_clients, value: '{{inputs.parameters.min_fit_clients}}'}
+          - {name: num_local_rounds, value: '{{inputs.parameters.num_local_rounds}}'}
+          - {name: num_rounds, value: '{{inputs.parameters.num_rounds}}'}
+  - name: flower-server
+    container:
+      args: []
+      command: [python3, /pipelines/component/flwr_server, --num-rounds, '{{inputs.parameters.num_rounds}}',
+        --num-local-rounds, '{{inputs.parameters.num_local_rounds}}', --min-available-clients,
+        '{{inputs.parameters.min_available_clients}}', --min-fit-clients, '{{inputs.parameters.min_fit_clients}}',
+        --min-eval-clients, '{{inputs.parameters.min_eval_clients}}', --output-path,
+        /tmp/outputs/output_path/data, --metadata-output-path, /tmp/outputs/MLPipeline_ui_metadata/data]
+      image: localhost:5000/fl-server:0.0.0-dev-9366134
+    inputs:
+      parameters:
+      - {name: min_available_clients}
+      - {name: min_eval_clients}
+      - {name: min_fit_clients}
+      - {name: num_local_rounds}
+      - {name: num_rounds}
+    outputs:
+      artifacts:
+      - {name: mlpipeline-ui-metadata, path: /tmp/outputs/MLPipeline_ui_metadata/data}
+      - {name: flower-server-output_path, path: /tmp/outputs/output_path/data}
+    metadata:
+      labels:
+        katulu/fl-server: flower-server
+        spire-workload: '{{workflow.name}}'
+        pipelines.kubeflow.org/kfp_sdk_version: 1.8.13
+        pipelines.kubeflow.org/pipeline-sdk-type: kfp
+        pipelines.kubeflow.org/enable_caching: "false"
+      annotations: {pipelines.kubeflow.org/component_spec: '{"description": "Start
+          a Flower server for Federated Learning", "implementation": {"container":
+          {"command": ["python3", "/pipelines/component/flwr_server", "--num-rounds",
+          {"inputValue": "num_rounds"}, "--num-local-rounds", {"inputValue": "num_local_rounds"},
+          "--min-available-clients", {"inputValue": "min_available_clients"}, "--min-fit-clients",
+          {"inputValue": "min_fit_clients"}, "--min-eval-clients", {"inputValue":
+          "min_eval_clients"}, "--output-path", {"outputPath": "output_path"}, "--metadata-output-path",
+          {"outputPath": "MLPipeline_ui_metadata"}], "image": "localhost:5000/fl-server:0.0.0-dev-9366134"}},
+          "inputs": [{"name": "num_rounds", "type": "Integer"}, {"name": "num_local_rounds",
+          "type": "Integer"}, {"name": "min_available_clients", "type": "Integer"},
+          {"name": "min_fit_clients", "type": "Integer"}, {"name": "min_eval_clients",
+          "type": "Integer"}], "metadata": {"labels": {"katulu/fl-server": "flower-server"}},
+          "name": "Flower Server", "outputs": [{"name": "output_path", "type": "Directory"},
+          {"name": "MLPipeline_ui_metadata", "type": "UI metadata"}]}', pipelines.kubeflow.org/component_ref: '{}',
+        pipelines.kubeflow.org/arguments.parameters: '{"min_available_clients": "{{inputs.parameters.min_available_clients}}",
+          "min_eval_clients": "{{inputs.parameters.min_eval_clients}}", "min_fit_clients":
+          "{{inputs.parameters.min_fit_clients}}", "num_local_rounds": "{{inputs.parameters.num_local_rounds}}",
+          "num_rounds": "{{inputs.parameters.num_rounds}}"}'}
+    sidecars:
+    - args: [-l, debug, --local-address-ip-version, v4, -c, /run/envoy/envoy.yaml,
+        --base-id, '1']
+      command: [/docker-entrypoint.sh]
+      image: envoyproxy/envoy:v1.20-latest
+      name: envoyproxy
+      volumeMounts:
+      - {mountPath: /run/envoy, name: envoy-config, readOnly: true}
+      - {mountPath: /run/spire/sockets, name: spire-agent-socket, readOnly: true}
+    volumes:
+    - configMap: {name: '{{workflow.name}}-envoyproxy'}
+      name: envoy-config
+    - hostPath: {path: /run/spire/sockets, type: DirectoryOrCreate}
+      name: spire-agent-socket
+  - name: prepare-build-context
+    container:
+      args: []
+      command:
+      - /bin/sh
+      - -ex
+      - -c
+      - |-
+        mkdir -p "$3"
+        echo "$2" > "$3/main.py"
+        cat << EOF > "$3/Dockerfile"
+        FROM $0
+        RUN python -m pip install --no-cache-dir $1
+        COPY main.py /app/
+        ENTRYPOINT [ "python", "/app/main.py" ]
+        EOF
+        ls "$3"
+      - python:3.10
+      - tensorflow flwr
+      - |
+        import flwr as fl
+        import tensorflow as tf
+
+        (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
+
+        model = tf.keras.models.Sequential([
+            tf.keras.layers.Flatten(input_shape=(28, 28)),
+            tf.keras.layers.Dense(128, activation="relu"),
+            tf.keras.layers.Dense(10),
+        ])
+        model.compile("adam", "sparse_categorical_crossentropy", metrics=["accuracy"])
+
+        class MNISTClient(fl.client.NumPyClient):
+            def get_parameters(self):
+                return model.get_weights()
+
+            def fit(self, parameters, config):
+                model.set_weights(parameters)
+                model.fit(x_train, y_train, epochs=1, batch_size=32)
+                return model.get_weights(), len(x_train), {}
+
+            def evaluate(self, parameters, config):
+                model.set_weights(parameters)
+                loss, accuracy = model.evaluate(x_test, y_test)
+                return loss, len(x_test), {"accuracy": accuracy}
+
+        fl.client.start_numpy_client("localhost:9080", client=MNISTClient())
+      - /tmp/outputs/build_context_path/data
+      image: alpine
+    outputs:
+      artifacts:
+      - {name: prepare-build-context-build_context_path, path: /tmp/outputs/build_context_path/data}
+    metadata:
+      labels:
+        pipelines.kubeflow.org/kfp_sdk_version: 1.8.13
+        pipelines.kubeflow.org/pipeline-sdk-type: kfp
+        pipelines.kubeflow.org/enable_caching: "false"
+      annotations: {pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
+          {"command": ["/bin/sh", "-ex", "-c", "mkdir -p \"$3\"\necho \"$2\" > \"$3/main.py\"\ncat
+          << EOF > \"$3/Dockerfile\"\nFROM $0\nRUN python -m pip install --no-cache-dir
+          $1\nCOPY main.py /app/\nENTRYPOINT [ \"python\", \"/app/main.py\" ]\nEOF\nls
+          \"$3\"", {"inputValue": "base_image"}, {"inputValue": "pip_packages"}, {"inputValue":
+          "python_script"}, {"outputPath": "build_context_path"}], "image": "alpine"}},
+          "inputs": [{"name": "base_image", "type": "String"}, {"name": "pip_packages",
+          "type": "String"}, {"name": "python_script", "type": "String"}], "name":
+          "Prepare build context", "outputs": [{"name": "build_context_path", "type":
+          "Directory"}]}', pipelines.kubeflow.org/component_ref: '{}', pipelines.kubeflow.org/arguments.parameters: '{"base_image":
+          "python:3.10", "pip_packages": "tensorflow flwr", "python_script": "import
+          flwr as fl\nimport tensorflow as tf\n\n(x_train, y_train), (x_test, y_test)
+          = tf.keras.datasets.mnist.load_data()\n\nmodel = tf.keras.models.Sequential([\n    tf.keras.layers.Flatten(input_shape=(28,
+          28)),\n    tf.keras.layers.Dense(128, activation=\"relu\"),\n    tf.keras.layers.Dense(10),\n])\nmodel.compile(\"adam\",
+          \"sparse_categorical_crossentropy\", metrics=[\"accuracy\"])\n\nclass MNISTClient(fl.client.NumPyClient):\n    def
+          get_parameters(self):\n        return model.get_weights()\n\n    def fit(self,
+          parameters, config):\n        model.set_weights(parameters)\n        model.fit(x_train,
+          y_train, epochs=1, batch_size=32)\n        return model.get_weights(), len(x_train),
+          {}\n\n    def evaluate(self, parameters, config):\n        model.set_weights(parameters)\n        loss,
+          accuracy = model.evaluate(x_test, y_test)\n        return loss, len(x_test),
+          {\"accuracy\": accuracy}\n\nfl.client.start_numpy_client(\"localhost:9080\",
+          client=MNISTClient())\n"}'}
+  - name: setup-flower-server-infrastructure
+    container:
+      args:
+      - "kubectl apply -f - << EOF && mkdir -p $(dirname \"$0\") && kubectl -n katulu-fl\
+        \ get virtualservice \"{{workflow.name}}\" -o jsonpath=\"{ .spec.hosts[0]\
+        \ }\" > \"$0\" \n---\napiVersion: networking.istio.io/v1alpha3\nkind: VirtualService\n\
+        metadata:\n  name: \"{{workflow.name}}\"\n  namespace: katulu-fl\n  labels:\n\
+        \    workflows.argoproj.io/workflow: {{workflow.name}}\nspec:\n  gateways:\n\
+        \    - flower-server-envoyproxy\n  hosts:\n    - \"{{workflow.name}}.fl.katulu.io\"\
+        \n  tls:\n    - match:\n        - port: 443\n          sniHosts:\n       \
+        \     - \"{{workflow.name}}.fl.katulu.io\"\n      route:\n        - destination:\n\
+        \            host: \"{{workflow.name}}-envoyproxy\"\n            port:\n \
+        \             number: 9001\n\n---\napiVersion: v1\nkind: Service\nmetadata:\n\
+        \  name: \"{{workflow.name}}-flower-server\"\n  namespace: katulu-fl\n  labels:\n\
+        \    workflows.argoproj.io/workflow: {{workflow.name}}\nspec:\n  selector:\n\
+        \    spire-workload: \"{{workflow.name}}\"\n  ports:\n    - name: grpc\n \
+        \     protocol: TCP\n      port: 8080\n      targetPort: 8080\n\n---\napiVersion:\
+        \ v1\nkind: Service\nmetadata:\n  name: \"{{workflow.name}}-envoyproxy\"\n\
+        \  namespace: katulu-fl\n  labels:\n    workflows.argoproj.io/workflow: {{workflow.name}}\n\
+        spec:\n  selector:\n    spire-workload: \"{{workflow.name}}\"\n  ports:\n\
+        \    - name: grpc\n      port: 9001\n      targetPort: 9001\n      protocol:\
+        \ TCP\n\n---\napiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: \"{{workflow.name}}-envoyproxy\"\
+        \n  namespace: katulu-fl\n  labels:\n    workflows.argoproj.io/workflow: {{workflow.name}}\n\
+        data:\n  envoy.yaml: |\n    ---\n    node:\n      id: \"{{workflow.name}}\"\
+        \n      cluster: local-k8s\n    static_resources:\n      listeners:\n    \
+        \    - name: local_service\n          address:\n            socket_address:\n\
+        \              address: 0.0.0.0\n              port_value: 9001\n        \
+        \  filter_chains:\n            - filters:\n              - name: envoy.filters.network.http_connection_manager\n\
+        \                typed_config:\n                  \"@type\": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager\n\
+        \                  set_current_client_cert_details:\n                    uri:\
+        \ true\n                  codec_type: AUTO\n                  stat_prefix:\
+        \ tls-http-listener\n                  access_log:\n                    -\
+        \ name: envoy.file_access_log\n                      config:\n           \
+        \             path: \"/dev/stdout\"\n                  route_config:\n   \
+        \                 name: local_route\n                    virtual_hosts:\n\
+        \                      - name: flower-server\n                        domains:\n\
+        \                          - \"*\"\n                        routes:\n    \
+        \                      - match:\n                              prefix: \"\
+        /\"\n                            route:\n                              cluster:\
+        \ flower-server\n                  access_log:\n                    - name:\
+        \ file\n                      typed_config:\n                        \"@type\"\
+        : type.googleapis.com/envoy.extensions.access_loggers.file.v3.FileAccessLog\n\
+        \                        path: /dev/stdout\n                  http_filters:\n\
+        \                    - name: envoy.filters.http.router\n              transport_socket:\n\
+        \                name: envoy.transport_sockets.tls\n                typed_config:\n\
+        \                  \"@type\": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext\n\
+        \                  common_tls_context:\n                    tls_certificate_sds_secret_configs:\n\
+        \                      - name: spiffe://katulu.io/{{workflow.name}}\n    \
+        \                    sds_config:\n                          resource_api_version:\
+        \ V3\n                          api_config_source:\n                     \
+        \       api_type: GRPC\n                            transport_api_version:\
+        \ V3\n                            grpc_services:\n                       \
+        \       envoy_grpc:\n                                cluster_name: spire_agent\n\
+        \                    combined_validation_context:\n                      default_validation_context:\n\
+        \                        match_subject_alt_names:\n                      \
+        \    exact: spiffe://katulu.io/flower-client\n                      validation_context_sds_secret_config:\n\
+        \                        name: spiffe://katulu.io\n                      \
+        \  sds_config:\n                          resource_api_version: V3\n     \
+        \                     api_config_source:\n                            api_type:\
+        \ GRPC\n                            transport_api_version: V3\n          \
+        \                  grpc_services:\n                              envoy_grpc:\n\
+        \                                cluster_name: spire_agent\n      clusters:\n\
+        \        - name: spire_agent\n          connect_timeout: 1s\n          type:\
+        \ STATIC\n          lb_policy: ROUND_ROBIN\n          typed_extension_protocol_options:\n\
+        \            envoy.extensions.upstreams.http.v3.HttpProtocolOptions:\n   \
+        \           \"@type\": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions\n\
+        \              explicit_http_config:\n                http2_protocol_options:\
+        \ {}\n          load_assignment:\n            cluster_name: spire_agent\n\
+        \            endpoints:\n              - lb_endpoints:\n                -\
+        \ endpoint:\n                    address:\n                      pipe:\n \
+        \                       path: /run/spire/sockets/agent.sock\n        - name:\
+        \ flower-server\n          connect_timeout: 1s\n          type: strict_dns\n\
+        \          typed_extension_protocol_options:\n            envoy.extensions.upstreams.http.v3.HttpProtocolOptions:\n\
+        \              \"@type\": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions\n\
+        \              explicit_http_config:\n                http2_protocol_options:\
+        \ {}\n          load_assignment:\n            cluster_name: flower-server\n\
+        \            endpoints:\n              - lb_endpoints:\n                -\
+        \ endpoint:\n                    address:\n                      socket_address:\n\
+        \                        address: \"{{workflow.name}}-flower-server\"\n  \
+        \                      port_value: 8080\nEOF"
+      - /tmp/outputs/flower_server_sni/data
+      command: [sh, -c]
+      image: gcr.io/cloud-builders/kubectl
+    outputs:
+      artifacts:
+      - {name: setup-flower-server-infrastructure-flower_server_sni, path: /tmp/outputs/flower_server_sni/data}
+    metadata:
+      labels:
+        katulu/fl-server: infrastructure
+        pipelines.kubeflow.org/kfp_sdk_version: 1.8.13
+        pipelines.kubeflow.org/pipeline-sdk-type: kfp
+        pipelines.kubeflow.org/enable_caching: "false"
+      annotations: {pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
+          {"args": ["kubectl apply -f - << EOF && mkdir -p $(dirname \"$0\") && kubectl
+          -n katulu-fl get virtualservice \"{{workflow.name}}\" -o jsonpath=\"{ .spec.hosts[0]
+          }\" > \"$0\" \n---\napiVersion: networking.istio.io/v1alpha3\nkind: VirtualService\nmetadata:\n  name:
+          \"{{workflow.name}}\"\n  namespace: katulu-fl\n  labels:\n    workflows.argoproj.io/workflow:
+          {{workflow.name}}\nspec:\n  gateways:\n    - flower-server-envoyproxy\n  hosts:\n    -
+          \"{{workflow.name}}.fl.katulu.io\"\n  tls:\n    - match:\n        - port:
+          443\n          sniHosts:\n            - \"{{workflow.name}}.fl.katulu.io\"\n      route:\n        -
+          destination:\n            host: \"{{workflow.name}}-envoyproxy\"\n            port:\n              number:
+          9001\n\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: \"{{workflow.name}}-flower-server\"\n  namespace:
+          katulu-fl\n  labels:\n    workflows.argoproj.io/workflow: {{workflow.name}}\nspec:\n  selector:\n    spire-workload:
+          \"{{workflow.name}}\"\n  ports:\n    - name: grpc\n      protocol: TCP\n      port:
+          8080\n      targetPort: 8080\n\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name:
+          \"{{workflow.name}}-envoyproxy\"\n  namespace: katulu-fl\n  labels:\n    workflows.argoproj.io/workflow:
+          {{workflow.name}}\nspec:\n  selector:\n    spire-workload: \"{{workflow.name}}\"\n  ports:\n    -
+          name: grpc\n      port: 9001\n      targetPort: 9001\n      protocol: TCP\n\n---\napiVersion:
+          v1\nkind: ConfigMap\nmetadata:\n  name: \"{{workflow.name}}-envoyproxy\"\n  namespace:
+          katulu-fl\n  labels:\n    workflows.argoproj.io/workflow: {{workflow.name}}\ndata:\n  envoy.yaml:
+          |\n    ---\n    node:\n      id: \"{{workflow.name}}\"\n      cluster: local-k8s\n    static_resources:\n      listeners:\n        -
+          name: local_service\n          address:\n            socket_address:\n              address:
+          0.0.0.0\n              port_value: 9001\n          filter_chains:\n            -
+          filters:\n              - name: envoy.filters.network.http_connection_manager\n                typed_config:\n                  \"@type\":
+          type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager\n                  set_current_client_cert_details:\n                    uri:
+          true\n                  codec_type: AUTO\n                  stat_prefix:
+          tls-http-listener\n                  access_log:\n                    -
+          name: envoy.file_access_log\n                      config:\n                        path:
+          \"/dev/stdout\"\n                  route_config:\n                    name:
+          local_route\n                    virtual_hosts:\n                      -
+          name: flower-server\n                        domains:\n                          -
+          \"*\"\n                        routes:\n                          - match:\n                              prefix:
+          \"/\"\n                            route:\n                              cluster:
+          flower-server\n                  access_log:\n                    - name:
+          file\n                      typed_config:\n                        \"@type\":
+          type.googleapis.com/envoy.extensions.access_loggers.file.v3.FileAccessLog\n                        path:
+          /dev/stdout\n                  http_filters:\n                    - name:
+          envoy.filters.http.router\n              transport_socket:\n                name:
+          envoy.transport_sockets.tls\n                typed_config:\n                  \"@type\":
+          type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext\n                  common_tls_context:\n                    tls_certificate_sds_secret_configs:\n                      -
+          name: spiffe://katulu.io/{{workflow.name}}\n                        sds_config:\n                          resource_api_version:
+          V3\n                          api_config_source:\n                            api_type:
+          GRPC\n                            transport_api_version: V3\n                            grpc_services:\n                              envoy_grpc:\n                                cluster_name:
+          spire_agent\n                    combined_validation_context:\n                      default_validation_context:\n                        match_subject_alt_names:\n                          exact:
+          spiffe://katulu.io/flower-client\n                      validation_context_sds_secret_config:\n                        name:
+          spiffe://katulu.io\n                        sds_config:\n                          resource_api_version:
+          V3\n                          api_config_source:\n                            api_type:
+          GRPC\n                            transport_api_version: V3\n                            grpc_services:\n                              envoy_grpc:\n                                cluster_name:
+          spire_agent\n      clusters:\n        - name: spire_agent\n          connect_timeout:
+          1s\n          type: STATIC\n          lb_policy: ROUND_ROBIN\n          typed_extension_protocol_options:\n            envoy.extensions.upstreams.http.v3.HttpProtocolOptions:\n              \"@type\":
+          type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions\n              explicit_http_config:\n                http2_protocol_options:
+          {}\n          load_assignment:\n            cluster_name: spire_agent\n            endpoints:\n              -
+          lb_endpoints:\n                - endpoint:\n                    address:\n                      pipe:\n                        path:
+          /run/spire/sockets/agent.sock\n        - name: flower-server\n          connect_timeout:
+          1s\n          type: strict_dns\n          typed_extension_protocol_options:\n            envoy.extensions.upstreams.http.v3.HttpProtocolOptions:\n              \"@type\":
+          type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions\n              explicit_http_config:\n                http2_protocol_options:
+          {}\n          load_assignment:\n            cluster_name: flower-server\n            endpoints:\n              -
+          lb_endpoints:\n                - endpoint:\n                    address:\n                      socket_address:\n                        address:
+          \"{{workflow.name}}-flower-server\"\n                        port_value:
+          8080\nEOF", {"outputPath": "flower_server_sni"}], "command": ["sh", "-c"],
+          "image": "gcr.io/cloud-builders/kubectl"}}, "metadata": {"labels": {"katulu/fl-server":
+          "infrastructure"}}, "name": "Setup Flower Server Infrastructure", "outputs":
+          [{"name": "flower_server_sni", "type": "Path"}]}', pipelines.kubeflow.org/component_ref: '{}'}
+  arguments:
+    parameters:
+    - {name: image_tag, value: 'fl-client:2022.7.28-15.17'}
+    - {name: num_rounds, value: '3'}
+    - {name: num_local_rounds, value: '1'}
+    - {name: min_available_clients, value: '2'}
+    - {name: min_fit_clients, value: '2'}
+    - {name: min_eval_clients, value: '2'}
+  serviceAccountName: pipeline-runner
+  onExit: cleanup-flower-server-infrastructure

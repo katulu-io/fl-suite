@@ -1,0 +1,2 @@
+kfp==1.8.13
+argo-workflows==6.3.8

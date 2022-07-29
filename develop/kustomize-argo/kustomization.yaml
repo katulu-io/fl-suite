@@ -1,0 +1,19 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: argo
+
+resources:
+  - ../../components/container-registry/kustomize/base
+  - ../../components/client-image-builder/kustomize
+  - argo-server-nodeport.yaml
+
+secretGenerator:
+  - name: internal-registry-credentials
+    type: kubernetes.io/dockerconfigjson
+    files:
+      - .dockerconfigjson=config/internal-registry-credentials.json
+
+generatorOptions:
+  disableNameSuffixHash: true
