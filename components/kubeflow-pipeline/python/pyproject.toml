@@ -12,8 +12,8 @@ readme = "README.md"
 packages = [
     { include = "fl_suite" }
 ]
+# Explicitly included as 'poetry' will exclude files in '.gitignore' by default
 include = [
-    # Explicitly included as 'poetry' will exclude files in '.gitignore' by default
     "fl_suite/_version.py"
 ]
 exclude = [
@@ -53,5 +53,5 @@ disable = "missing-module-docstring,duplicate-code"
 [tool.pytest.ini_options]
 minversion = "7.0"
 testpaths = [
-    "tests"   
+    "tests"
 ]

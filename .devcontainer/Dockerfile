@@ -143,7 +143,7 @@ ENV POETRY_HOME "/opt/poetry"
 ENV PATH $POETRY_HOME/bin:$PATH
 RUN url="https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py"; \
     \
-    wget -q -O- "$url" | POETRY_VERSION=1.1.13 python3 -; \
+    wget -q -O- "$url" | POETRY_VERSION=1.1.14 python3 -; \
     poetry --version;
 
 # Install kind
