@@ -49,7 +49,7 @@ This package builds a federated learning pipeline. Preparing authentications to 
 Let's create a uniwear federated learning client. The client defines the model, loads the uniwear dataset from the repository address, shuffles the rows for regression, prepares test and training set, applies feature scaling, trains a nonlinear regression model, and reports Mean Absolute Percent Error (MAPE) performance per client. 
 
 ```python
-@pipelines.fl_client(packages=["tensorflow", "flwr", "pandas", "scikit-learn"])
+@pipelines.fl_client(packages=["tensorflow", "flwr==0.19.0", "pandas", "scikit-learn"])
 def uniwear_client():
     """Participating tool wear clients will use different experiments."""
     import flwr as fl
@@ -130,7 +130,7 @@ def uniwear_client():
         def evaluate(self, parameters, config):
             model.set_weights(parameters)
             loss, mape = model.evaluate(x_test, y_test, verbose=2)
-            return loss, len(x_val), {"accuracy": mape}
+            return loss, len(x_test), {"accuracy": mape}
 
     fl.client.start_numpy_client("localhost:9080", client=UniWearClient())
 ```
