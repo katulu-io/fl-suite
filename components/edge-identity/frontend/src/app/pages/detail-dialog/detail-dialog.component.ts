@@ -34,15 +34,28 @@ export class DetailDialogComponent implements OnInit, OnDestroy {
     public snackBar: SnackBarService,
     @Inject(MAT_DIALOG_DATA) public edge: EdgeResponseObject,
   ) {
-    this.crdText = `apiVersion: fl.katulu.io/v1alpha1
+    this.crdText = `---
+apiVersion: fl.katulu.io/v1alpha1
 kind: FlEdge
 metadata:
   name: ${edge.name}
 spec:
-  join-token: ${edge.join_token}
-  fl-suite-url: fl.katulu.io
-  fl-suite-port: 443
-  orchestrator-sni: fl-orchestrator.fl.katulu.io`;
+  auth:
+    spire:
+      server-address: ${edge.server_address}
+      server-port: ${edge.server_port}
+      trust-domain: ${edge.trust_domain}
+      join-token: ${edge.join_token}
+      skip-kubelet-verification: ${edge.skip_kubelet_verification}
+---
+apiVersion: fl.katulu.io/v1alpha1
+kind: FlOperator
+metadata:
+  name: ${edge.name}
+spec:
+  orchestrator-url: ${edge.orchestrator_url}
+  orchestrator-port: ${edge.orchestrator_port}
+  orchestrator-sni: ${edge.orchestrator_sni}`;
   }
 
   ngOnInit() { }

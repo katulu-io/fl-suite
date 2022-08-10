@@ -1,3 +1,4 @@
+from flask import current_app
 from kubeflow.kubeflow.crud_backend import api, helpers, logging, status
 
 from ..db import query_db
@@ -18,17 +19,20 @@ def get_edges(namespace):
         "WHERE e.namespace = ?;",
         (namespace,),
     )
+    spire_config = current_app.config["FL_SUITE_CONFIG"]["fl_edge"]["auth"]["spire"]
+    fl_operator_config = current_app.config["FL_SUITE_CONFIG"]["fl_operator"]
     if results is not None:
         for edge in results:
-            edge_list.append(
-                {
-                    "name": edge["name"],
-                    "namespace": edge["namespace"],
-                    # The status is hardcoded because it is only used for presentation purposes
-                    "status": status.create_status(status.STATUS_PHASE.READY, "Ready"),
-                    "age": helpers.get_uptime(edge["created_at"]),
-                    "join_token": edge["join_token"],
-                }
-            )
+            edge_dict = {
+                "name": edge["name"],
+                "namespace": edge["namespace"],
+                # The status is hardcoded because it is only used for presentation purposes
+                "status": status.create_status(status.STATUS_PHASE.READY, "Ready"),
+                "age": helpers.get_uptime(edge["created_at"]),
+                "join_token": edge["join_token"],
+            }
+            edge_dict.update(spire_config)
+            edge_dict.update(fl_operator_config)
+            edge_list.append(edge_dict)
 
     return api.success_response("edges", edge_list)
