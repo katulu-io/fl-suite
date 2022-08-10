@@ -34,7 +34,7 @@ The `fl_suite.pipelines` package provides functions to describe Federated Learni
 Let's create a simple Federated Learning client that loads the MNIST dataset and trains a simple model. The `pipelines.fl_client` decorator indicates that this is the Federated Learning client code.
 
 ```python
-@pipelines.fl_client(packages=["tensorflow", "flwr"])
+@pipelines.fl_client(packages=["tensorflow", "flwr==0.19.0"])
 def mnist_client():
     import flwr as fl
     import tensorflow as tf
