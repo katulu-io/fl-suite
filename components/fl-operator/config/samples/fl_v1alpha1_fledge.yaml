@@ -1,0 +1,12 @@
+apiVersion: fl.katulu.io/v1alpha1
+kind: FlEdge
+metadata:
+  name: fledge-sample
+spec:
+  auth:
+    spire:
+      server-address: spire-server.spire.svc.cluster.local
+      server-port: 8081
+      trust-domain: katulu.io
+      join-token: f081a301-cb4d-4457-bd25-cade3145c542
+      skip-kubelet-verification: true

@@ -2,8 +2,7 @@ apiVersion: fl.katulu.io/v1alpha1
 kind: FlOperator
 metadata:
   name: floperator-sample
-  namespace: katulu-fl
 spec:
-  orchestrator-url: localhost
+  orchestrator-url: istio-ingressgateway.istio-system.svc.cluster.local
   orchestrator-port: 443
-  orchestrator-sni: fl-orchestrator.fl.katulu.io
+  orchestrator-sni: fl-orchestrator.fl-suite
