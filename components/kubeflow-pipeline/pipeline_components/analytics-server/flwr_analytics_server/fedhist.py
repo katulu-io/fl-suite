@@ -2,19 +2,20 @@ import io
 import json
 from argparse import ArgumentParser, Namespace
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Any, Dict, List, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
 from flwr.common import Properties, Scalar
+from numpy.typing import NDArray
 
-from .provider import AnalyticsProvider, scalar_to_numpy
+from flwr_analytics_server.provider import AnalyticsProvider, bytes_to_numpy
 
 
 @dataclass
 class HistogramData:
-    counts: np.ndarray
-    bins: np.ndarray
+    counts: NDArray[Any]
+    bins: NDArray[Any]
 
 
 class HistogramProvider(AnalyticsProvider):
@@ -33,8 +34,8 @@ class HistogramProvider(AnalyticsProvider):
     def add_client_data(self, properties: Properties) -> None:
         self._client_data.append(
             HistogramData(
-                counts=scalar_to_numpy(properties["counts"]),
-                bins=scalar_to_numpy(properties["bins"]),
+                counts=bytes_to_numpy(cast(bytes, properties["counts"])),
+                bins=bytes_to_numpy(cast(bytes, properties["bins"])),
             )
         )
 
@@ -46,7 +47,11 @@ class HistogramProvider(AnalyticsProvider):
 
         fix, ax = plt.subplots()
 
-        ax.hist(self._result.bins[:-1], self._result.bins, weights=self._result.counts)
+        ax.hist(
+            self._result.bins[:-1],
+            self._result.bins,
+            weights=self._result.counts,
+        )
 
         plt.savefig(fig_svg, format="svg")
 

@@ -1,9 +1,10 @@
 import argparse
 import logging
 from pathlib import Path
-from typing import Dict
+from typing import Dict, cast
 
 import flwr
+from flwr.server import Server, ServerConfig
 from flwr.server.client_manager import SimpleClientManager
 
 from .correlation import CorrelationProvider
@@ -34,9 +35,9 @@ if __name__ == "__main__":
 
     subparsers = parser.add_subparsers(dest="provider", required=True)
 
-    for name, provider in providers.items():
+    for name, p in providers.items():
         provider_parser = subparsers.add_parser(name)
-        provider.add_arguments(provider_parser)
+        p.add_arguments(provider_parser)
 
     args = parser.parse_args()
 
@@ -50,13 +51,20 @@ if __name__ == "__main__":
 
     client_manager = SimpleClientManager()
 
-    server = AnalyticsServer(
-        client_manager=client_manager,
-        min_available_clients=args.min_available_clients,
-        provider=provider,
+    # The cast to 'Server' is a hack. There isn't an ABC for a server and our
+    # implementation is only using a few parts of it, hence doesn't inherit
+    # from 'Server'. By casting here, the type system will ignore all missing
+    # functions from 'Server' not present in 'AnalyticsServer'.
+    server = cast(
+        Server,
+        AnalyticsServer(
+            client_manager=client_manager,
+            min_available_clients=args.min_available_clients,
+            provider=provider,
+        ),
     )
 
-    flwr.server.start_server(server=server, config={"num_rounds": 1})
+    flwr.server.start_server(server=server, config=ServerConfig(num_rounds=1))
 
     log.info(f"{provider.name} completed, preparing output")
     metadata = provider.result_metadata_json()

@@ -8,4 +8,6 @@ RUN python3 -m pip install --no-cache-dir -r /pipelines/component/requirements.t
 
 COPY flwr_server /pipelines/component/flwr_server
 
-ENTRYPOINT [ "python3", "/pipelines/component/flwr_server" ]
+ENV PYTHONPATH "${PYTHONPATH}:/pipelines/component"
+
+ENTRYPOINT [ "python3", "-m", "flwr_server" ]

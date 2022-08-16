@@ -2,22 +2,23 @@ import io
 import json
 from argparse import ArgumentParser, Namespace
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Any, Dict, List, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
 from flwr.common import Properties, Scalar
+from numpy.typing import NDArray
 
-from .provider import AnalyticsProvider, scalar_to_numpy
+from flwr_analytics_server.provider import AnalyticsProvider, bytes_to_numpy
 
 
 @dataclass
 class AggregationData:
     num_features: int
     num_entries: int
-    sums: np.ndarray
-    multiply_sums: np.ndarray
-    variances: np.ndarray
+    sums: NDArray[Any]
+    multiply_sums: NDArray[Any]
+    variances: NDArray[Any]
 
 
 class CorrelationProvider(AnalyticsProvider):
@@ -30,11 +31,13 @@ class CorrelationProvider(AnalyticsProvider):
     def add_client_data(self, properties: Properties) -> None:
         self._client_data.append(
             AggregationData(
-                num_features=properties["features"],
-                num_entries=properties["entries"],
-                sums=scalar_to_numpy(properties["sums"]),
-                multiply_sums=scalar_to_numpy(properties["multiply_sums"]),
-                variances=scalar_to_numpy(properties["variances"]),
+                num_features=int(properties["features"]),
+                num_entries=int(properties["entries"]),
+                sums=bytes_to_numpy(cast(bytes, properties["sums"])),
+                multiply_sums=bytes_to_numpy(
+                    cast(bytes, properties["multiply_sums"])
+                ),
+                variances=bytes_to_numpy(cast(bytes, properties["variances"])),
             )
         )
 
@@ -77,7 +80,7 @@ class CorrelationProvider(AnalyticsProvider):
 
 def distributed_correlation(
     num_features: int, data: List[AggregationData]
-) -> np.ndarray:
+) -> NDArray[Any]:
     total_entries = np.sum([d.num_entries for d in data])
     total_sums = np.sum([d.sums for d in data], axis=0)
     total_multiply_sums = np.sum([d.multiply_sums for d in data], axis=0)
@@ -100,9 +103,9 @@ def distributed_correlation(
 def _calc_variances(
     num_features: int,
     total_entries: int,
-    total_sums: np.ndarray,
+    total_sums: NDArray[Any],
     data: List[AggregationData],
-) -> np.ndarray:
+) -> NDArray[Any]:
     variances = np.zeros(num_features)
 
     total_avg = total_sums / total_entries
@@ -124,9 +127,9 @@ def _calc_variances(
 def _calc_covariances(
     num_features: int,
     total_entries: int,
-    total_sums: np.ndarray,
-    total_multiply_sums: np.ndarray,
-) -> np.ndarray:
+    total_sums: NDArray[Any],
+    total_multiply_sums: NDArray[Any],
+) -> NDArray[Any]:
     covariances = np.zeros((num_features, num_features))
     for i in range(num_features):
         for j in range(num_features):

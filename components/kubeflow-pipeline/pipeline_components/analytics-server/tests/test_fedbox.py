@@ -55,7 +55,7 @@ def run_two_client_example(_rtol=1e-05, _atol=1e-08) -> None:
         })
 
     provider.aggregate()
-    fivenum = provider._result
+    fivenum = provider._fivesum
     _fivenum = [fivenum.minimum, fivenum.quartile_first, fivenum.median, fivenum.quartile_third, fivenum.maximum]
     _fivenum_precomputed = [17.0, 17.21, 17.91, 19.03, 24.0]
     #
