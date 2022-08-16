@@ -45,8 +45,8 @@ ENV BUILDAH_ISOLATION=chroot
 # Install go (adapted from https://github.com/docker-library/golang/blob/master/1.16/buster/Dockerfile)
 ENV PATH /usr/local/go/bin:$PATH
 # hadolint ignore=SC2041
-RUN url='https://go.dev/dl/go1.18.3.linux-amd64.tar.gz'; \
-    sha256='956f8507b302ab0bb747613695cdae10af99bbd39a90cae522b7c0302cc27245'; \
+RUN url='https://go.dev/dl/go1.19.linux-amd64.tar.gz'; \
+    sha256='464b6b66591f6cf055bc5df90a9750bf5fbc9d038722bb84a9d56a2bea974be6'; \
     \
     wget -O go.tgz.asc "$url.asc" --progress=dot:giga; \
     wget -O go.tgz "$url" --progress=dot:giga; \
@@ -72,12 +72,12 @@ ENV PATH $GOPATH/bin:$PATH
 RUN mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 777 "$GOPATH"
 
 # Install golangci-lint (https://github.com/golangci/golangci-lint/releases)
-RUN url="https://github.com/golangci/golangci-lint/releases/download/v1.45.2/golangci-lint-1.45.2-linux-amd64.tar.gz"; \
-    sha256="595ad6c6dade4c064351bc309f411703e457f8ffbb7a1806b3d8ee713333427f"; \
+RUN url="https://github.com/golangci/golangci-lint/releases/download/v1.48.0/golangci-lint-1.48.0-linux-amd64.tar.gz"; \
+    sha256="127c5c9d47cf3a3cf4128815dea1d9623d57a83a22005e91b986b0cbceb09233"; \
     wget -O golangci-lint.tgz "$url" --progress=dot:giga; \
     echo "$sha256 *golangci-lint.tgz" | sha256sum --strict --check -; \
     \
-    tar -C /usr/local/bin -xzf golangci-lint.tgz --strip-components=1 golangci-lint-1.45.2-linux-amd64/golangci-lint; \
+    tar -C /usr/local/bin -xzf golangci-lint.tgz --strip-components=1 golangci-lint-1.48.0-linux-amd64/golangci-lint; \
     chmod +x /usr/local/bin/golangci-lint; \
     rm golangci-lint.tgz; \
     \
@@ -87,8 +87,8 @@ RUN url="https://github.com/golangci/golangci-lint/releases/download/v1.45.2/gol
 ENV CHROME_BIN=/usr/bin/chromium
 
 # Install node and yarn
-RUN url="https://nodejs.org/dist/v16.13.1/node-v16.13.1-linux-x64.tar.gz"; \
-    sha256='5f80197d654fd0b749cdeddf1f07a5eac1fcf6b423a00ffc8f2d3bea9c6dc8d1'; \
+RUN url="https://nodejs.org/dist/v16.16.0/node-v16.16.0-linux-x64.tar.gz"; \
+    sha256='c85b16d1a4c259d01be7111ecb0361260627e4fc245004a920521eacb28e50df'; \
     \
     wget -O node.tgz "$url" --progress=dot:giga; \
     echo "$sha256 *node.tgz" | sha256sum --strict --check -; \
@@ -99,11 +99,11 @@ RUN url="https://nodejs.org/dist/v16.13.1/node-v16.13.1-linux-x64.tar.gz"; \
     node --version; \
     \
     corepack enable; \
-    corepack prepare yarn@3.1.1 --activate;
+    corepack prepare yarn@3.2.2 --activate;
 
 # Install hadolint (https://github.com/hadolint/hadolint/releases)
-RUN url='https://github.com/hadolint/hadolint/releases/download/v2.8.0/hadolint-Linux-x86_64'; \
-    sha256='9dfc155139a1e1e9b3b28f3de9907736b9dfe7cead1c3a0ae7ff0158f3191674'; \
+RUN url='https://github.com/hadolint/hadolint/releases/download/v2.10.0/hadolint-Linux-x86_64'; \
+    sha256='8ee6ff537341681f9e91bae2d5da451b15c575691e33980893732d866d3cefc4'; \
     \
     wget -O hadolint "$url" --progress=dot:giga; \
     echo "$sha256 *hadolint" | sha256sum --strict --check -; \
@@ -114,9 +114,9 @@ RUN url='https://github.com/hadolint/hadolint/releases/download/v2.8.0/hadolint-
     hadolint --version
 
 # Install kubectl (https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/)
-RUN kubectl_version="1.23.1"; \
+RUN kubectl_version="1.24.3"; \
     url="https://dl.k8s.io/release/v${kubectl_version}/bin/linux/amd64/kubectl"; \
-    sha256="156fd5e7ebbedf3c482fd274089ad75a448b04cf42bc53f370e4e4ea628f705e"; \
+    sha256="8a45348bdaf81d46caf1706c8bf95b3f431150554f47d444ffde89e8cdd712c1"; \
     \
     wget -O kubectl "$url" --progress=dot:giga; \
     echo "$sha256 kubectl" | sha256sum --strict --check -; \
@@ -147,8 +147,8 @@ RUN url="https://raw.githubusercontent.com/python-poetry/poetry/master/install-p
     poetry --version;
 
 # Install kind
-RUN url="https://kind.sigs.k8s.io/dl/v0.13.0/kind-linux-amd64"; \
-    sha256="c80c6d1013337cbbe226c2eda0a3dc2d75af16e5fa8af4ce3fc9fedcf1f9d2dc"; \
+RUN url="https://kind.sigs.k8s.io/dl/v0.14.0/kind-linux-amd64"; \
+    sha256="af5e8331f2165feab52ec2ae07c427c7b66f4ad044d09f253004a20252524c8b"; \
     \
     wget -O kind "$url" --progress=dot:giga; \
     echo "$sha256 kind" | sha256sum --strict --check -; \

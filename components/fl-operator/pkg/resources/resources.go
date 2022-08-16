@@ -3,7 +3,7 @@ package resources
 import (
 	"bytes"
 	"html/template"
-	"io/ioutil"
+	"os"
 
 	pb "github.com/katulu-io/fl-suite/fl-orchestrator/pkg/api/fl_orchestrator/v1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -30,7 +30,7 @@ type EnvoyConfigContext struct {
 }
 
 func RenderEnvoyproxyConfig(context EnvoyConfigContext, envoyConfigFile string) (string, error) {
-	envoyConfigTemplate, err := ioutil.ReadFile(envoyConfigFile)
+	envoyConfigTemplate, err := os.ReadFile(envoyConfigFile)
 	if err != nil {
 		return "", err
 	}
@@ -51,7 +51,7 @@ func RenderEnvoyproxyConfig(context EnvoyConfigContext, envoyConfigFile string) 
 }
 
 func RenderSpireAgentConfig(context SpireAgentConfigContext, envoyConfigFile string) (string, error) {
-	envoyConfigTemplate, err := ioutil.ReadFile(envoyConfigFile)
+	envoyConfigTemplate, err := os.ReadFile(envoyConfigFile)
 	if err != nil {
 		return "", err
 	}
