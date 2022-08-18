@@ -5,3 +5,14 @@ kind: Kustomization
 namespace: edge-client-1
 resources:
   - ../../../kustomize/fl-edge/base
+
+patches:
+  - patch: |-
+      ---
+      apiVersion: fl.katulu.io/v1alpha1
+      kind: FlOperator
+      metadata:
+        name: floperator
+      spec:
+        registry-credentials:
+          secret: regcred

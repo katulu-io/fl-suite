@@ -80,7 +80,7 @@ type SpireAgentConfigContext struct {
 }
 
 // Creates new pod for the flower-client
-func NewPod(task *pb.OrchestratorMessage_TaskSpec, name types.NamespacedName, envoyConfigName string) *corev1.Pod {
+func NewPod(task *pb.OrchestratorMessage_TaskSpec, name types.NamespacedName, envoyConfigName string, registryCredentialsSecret string) *corev1.Pod {
 	shareProcessNamespace := true
 	labels := map[string]string{
 		FlClientDeploymentLabelKey: FlClientDeploymentLabelValue,
@@ -163,8 +163,7 @@ func NewPod(task *pb.OrchestratorMessage_TaskSpec, name types.NamespacedName, en
 					},
 				},
 			},
-			// TODO: Unhardcode secret name
-			ImagePullSecrets: []corev1.LocalObjectReference{{Name: "regcred"}},
+			ImagePullSecrets: []corev1.LocalObjectReference{{Name: registryCredentialsSecret}},
 		},
 	}
 }
