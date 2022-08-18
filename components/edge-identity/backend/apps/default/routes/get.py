@@ -21,6 +21,7 @@ def get_edges(namespace):
     )
     spire_config = current_app.config["FL_SUITE_CONFIG"]["fl_edge"]["auth"]["spire"]
     fl_operator_config = current_app.config["FL_SUITE_CONFIG"]["fl_operator"]
+    registry_auth = current_app.config["REGISTRY_AUTH"]
     if results is not None:
         for edge in results:
             edge_dict = {
@@ -33,6 +34,8 @@ def get_edges(namespace):
             }
             edge_dict.update(spire_config)
             edge_dict.update(fl_operator_config)
+            if registry_auth:
+                edge_dict["registry_credentials"] = registry_auth
             edge_list.append(edge_dict)
 
     return api.success_response("edges", edge_list)

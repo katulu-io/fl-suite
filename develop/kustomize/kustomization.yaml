@@ -21,6 +21,12 @@ secretGenerator:
       - .dockerconfigjson=config/internal-registry-credentials.json
 
   - name: internal-registry-credentials
+    namespace: spire
+    type: kubernetes.io/dockerconfigjson
+    files:
+      - .dockerconfigjson=config/internal-registry-credentials.json
+
+  - name: internal-registry-credentials
     namespace: katulu-fl
     type: kubernetes.io/dockerconfigjson
     files:
@@ -42,6 +48,32 @@ configMapGenerator:
       - agent.conf=config/spire-agent.conf
 
 patches:
+  - patch: |-
+      - op: add
+        path: /spec/template/spec/containers/2/volumeMounts/1
+        value:
+          name: internal-registry-credentials
+          mountPath: /container-registry
+          readOnly: false
+      - op: add
+        path: /spec/template/spec/containers/2/env/3
+        value:
+          name: REGISTRY_AUTH_FILE_PATH
+          value: /container-registry/.dockerconfigjson
+
+      - op: add
+        path: /spec/template/spec/volumes/5
+        value:
+          name: internal-registry-credentials
+          secret:
+            secretName: internal-registry-credentials
+    target:
+      group: apps
+      version: v1
+      kind: StatefulSet
+      name: spire-server
+      namespace: spire
+
   # Set the container-registry to listen to self container-name: local.fl-suite-control-plane
   - patch: |-
       - op: replace

@@ -17,6 +17,7 @@ export interface EdgeResponseObject {
   orchestrator_url: string;
   orchestrator_port: number;
   orchestrator_sni: string;
+  registry_credentials: string;
 }
 
 export interface EdgeProcessedObject extends EdgeResponseObject {

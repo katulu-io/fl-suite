@@ -1,3 +1,4 @@
+import base64
 import json
 import os
 from typing import Optional
@@ -12,7 +13,10 @@ log = logging.getLogger(__name__)
 
 
 def create_app(
-    name=__name__, cfg: config.Config = None, fl_suite_config_path: Optional[str] = None
+    name=__name__,
+    cfg: config.Config = None,
+    fl_suite_config_path: Optional[str] = None,
+    registry_auth_file_path: Optional[str] = None,
 ):
     cfg = config.Config() if cfg is None else cfg
 
@@ -25,11 +29,20 @@ def create_app(
 
     log.info("Setting STATIC_DIR to: " + static_dir)
     app.config["STATIC_DIR"] = static_dir
+
     if fl_suite_config_path is None:
         app.config["FL_SUITE_CONFIG"] = DEFAULT_FL_SUITE_CONFIG
     else:
         with open(fl_suite_config_path, "r") as f:
             app.config["FL_SUITE_CONFIG"] = json.load(f)
+
+    if registry_auth_file_path is None:
+        app.config["REGISTRY_AUTH"] = None
+    else:
+        with open(registry_auth_file_path, "r") as f:
+            app.config["REGISTRY_AUTH"] = base64.b64encode(
+                bytes(f.read(), "utf-8")
+            ).decode("utf-8")
 
     # Register the app's blueprints
     app.register_blueprint(routes_bp)

@@ -65,6 +65,10 @@ def post_edge(namespace):
     new_edge.update(spire_config)
     new_edge.update(fl_operator_config)
 
+    registry_auth = current_app.config["REGISTRY_AUTH"]
+    if registry_auth:
+        new_edge["registry_credentials"] = registry_auth
+
     log.info("Successfully created Edge %s/%s", namespace, edge_name)
 
     return api.success_response("edge", new_edge)
