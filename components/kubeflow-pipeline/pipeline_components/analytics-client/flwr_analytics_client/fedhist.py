@@ -1,12 +1,15 @@
+from typing import Any, cast
+
 import numpy as np
 from diffprivlib.tools import histogram as histogram_dp
 from flwr.common import Config, Properties
+from numpy.typing import NDArray
 
-from .provider import AnalyticsProvider, numpy_to_scalar
+from flwr_analytics_client.provider import AnalyticsProvider, numpy_to_scalar
 
 
 class HistogramProvider(AnalyticsProvider):
-    def __init__(self, data: np.ndarray) -> None:
+    def __init__(self, data: NDArray[Any]) -> None:
         self._data = data
 
     @property
@@ -15,7 +18,7 @@ class HistogramProvider(AnalyticsProvider):
 
     def get_properties(self, config: Config) -> Properties:
         nbins = config["nbins"]
-        hrange = (config["hmin"], config["hmax"])
+        hrange = float(config["hmin"]), float(config["hmax"])
 
         epsilon = config.get("epsilon")
         if epsilon is not None:

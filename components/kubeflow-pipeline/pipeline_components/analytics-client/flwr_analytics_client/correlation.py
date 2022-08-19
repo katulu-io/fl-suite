@@ -1,11 +1,14 @@
+from typing import Any
+
 import numpy as np
 from flwr.common import Config, Properties
+from numpy.typing import NDArray
 
-from .provider import AnalyticsProvider, numpy_to_scalar
+from flwr_analytics_client.provider import AnalyticsProvider, numpy_to_scalar
 
 
 class CorrelationProvider(AnalyticsProvider):
-    def __init__(self, data: np.ndarray) -> None:
+    def __init__(self, data: NDArray[Any]) -> None:
         self._data = data
 
     @property

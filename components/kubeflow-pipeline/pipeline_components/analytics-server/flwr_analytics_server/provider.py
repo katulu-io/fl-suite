@@ -1,10 +1,11 @@
 import io
 from abc import ABC, abstractmethod
 from argparse import ArgumentParser, Namespace
-from typing import Dict
+from typing import Any, Dict, cast
 
 import numpy as np
 from flwr.common import Properties, Scalar
+from numpy.typing import NDArray
 
 
 class AnalyticsProvider(ABC):
@@ -38,6 +39,6 @@ class AnalyticsProvider(ABC):
         pass
 
 
-def scalar_to_numpy(scalar: Scalar) -> np.ndarray:
-    buf = io.BytesIO(scalar)
-    return np.load(buf)
+def bytes_to_numpy(bytes: bytes) -> NDArray[Any]:
+    buf = io.BytesIO(bytes)
+    return cast(NDArray[Any], np.load(buf))

@@ -1,8 +1,10 @@
 import io
 from abc import ABC, abstractmethod
+from typing import Any
 
 import numpy as np
 from flwr.common import Config, Properties, Scalar
+from numpy.typing import NDArray
 
 
 class AnalyticsProvider(ABC):
@@ -16,7 +18,7 @@ class AnalyticsProvider(ABC):
         pass
 
 
-def numpy_to_scalar(input: np.ndarray) -> Scalar:
+def numpy_to_scalar(input: NDArray[Any]) -> Scalar:
     buf = io.BytesIO()
 
     np.save(buf, input)

@@ -8,10 +8,12 @@ Katulu GmbH
 
 """
 
-import numpy as np
 from dataclasses import dataclass
-from typing import List, Optional
-from .fedhist import HistogramData
+from typing import List, Optional, cast
+
+import numpy as np
+
+from flwr_analytics_server.fedhist import HistogramData
 
 
 @dataclass
@@ -24,8 +26,12 @@ class FiveNum:
     quartile_third: float
     maximum: float
 
-def compute_fivesum(hmin: float, hmax: float, histogram: HistogramData) -> FiveNum:
-    """ Compute five number summary. """
+
+def compute_fivesum(
+    hmin: float, hmax: float, histogram: HistogramData
+) -> FiveNum:
+    """Compute five number summary."""
+
     def inverse_value_bin(histogram: HistogramData, yvalue: float) -> float:
         """
 
@@ -33,10 +39,10 @@ def compute_fivesum(hmin: float, hmax: float, histogram: HistogramData) -> FiveN
 
         """
         idx = (np.abs(yvalue - histogram.counts)).argmin()
-        return histogram.bins[idx]
+        return float(histogram.bins[idx])
 
     dist = histogram.counts
-    
+
     fivenum = FiveNum(
         minimum=hmin,
         quartile_first=inverse_value_bin(histogram, np.quantile(dist, q=0.25)),

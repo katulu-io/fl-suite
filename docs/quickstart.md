@@ -34,7 +34,7 @@ The `fl_suite.pipelines` package provides functions to describe Federated Learni
 Let's create a simple Federated Learning client that loads the MNIST dataset and trains a simple model. The `pipelines.fl_client` decorator indicates that this is the Federated Learning client code.
 
 ```python
-@pipelines.fl_client(packages=["tensorflow", "flwr==0.19.0"])
+@pipelines.fl_client(packages=["tensorflow", "flwr==1.0.0"])
 def mnist_client():
     import flwr as fl
     import tensorflow as tf
@@ -62,7 +62,7 @@ def mnist_client():
             loss, accuracy = model.evaluate(x_test, y_test)
             return loss, len(x_test), {"accuracy": accuracy}
 
-    fl.client.start_numpy_client("localhost:9080", client=MNISTClient())
+    fl.client.start_numpy_client(server_address="localhost:9080", client=MNISTClient())
 ```
 
 FL Suite uses [Flower](https://flower.dev) as its mechanism for Federated Learning, therefore, we start a Flower client as part of this code. More information about Flower clients can be found in [its quickstart documentation](https://flower.dev/docs/quickstart-tensorflow.html), which this code closely follows. The Flower client connects to a specific URL `localhost:9080`. This is a special proxy that each client uses. FL Suite automatically resolves this URL to connect to the Flower server started by a pipeline using this client code.

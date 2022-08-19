@@ -1,0 +1,33 @@
+[tool.poetry]
+name = "analytics-client"
+version = "0.1.0"
+description = ""
+authors = ["Katulu GmbH <eng@katulu.io>"]
+
+[tool.poetry.dependencies]
+python = ">=3.8,<3.12"
+flwr = "^1.0.0"
+numpy = "^1.23.2"
+diffprivlib = "^0.5.2"
+
+[tool.poetry.dev-dependencies]
+isort = "^5.10.1"
+black = "^22.6.0"
+mypy = "^0.971"
+pytest = "^7.1.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
+line_length = 79
+profile = "black"
+
+[tool.black]
+line-length = 79
+target-version = ["py310"]
+
+[tool.mypy]
+ignore_missing_imports = true
+strict = true

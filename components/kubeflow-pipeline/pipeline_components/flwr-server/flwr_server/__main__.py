@@ -3,12 +3,14 @@ import io
 import json
 import os
 from pathlib import Path
+from typing import Any, List, cast
 
 import flwr
 import numpy as np
 import pandas as pd
+from flwr.server import ServerConfig
 
-from strategy import FedAvgStoreModelStrategy
+from flwr_server.strategy import FedAvgStoreModelStrategy
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -62,11 +64,13 @@ if __name__ == "__main__":
     strategy = FedAvgStoreModelStrategy(
         local_epochs=args.num_local_rounds,
         min_fit_clients=args.min_fit_clients,
-        min_eval_clients=args.min_eval_clients,
+        min_evaluate_clients=args.min_eval_clients,
         min_available_clients=args.min_available_clients,
     )
 
-    flwr.server.start_server(config={"num_rounds": args.num_rounds}, strategy=strategy)
+    flwr.server.start_server(
+        config=ServerConfig(num_rounds=args.num_rounds), strategy=strategy
+    )
 
     # The output paths might not exist yet.
     # In that case create it.
@@ -96,7 +100,14 @@ if __name__ == "__main__":
 
     df = pd.DataFrame(
         data,
-        columns=["run", "client_id", "accuracy", "precision", "recall", "num_examples"],
+        columns=[
+            "run",
+            "client_id",
+            "accuracy",
+            "precision",
+            "recall",
+            "num_examples",
+        ],
     )
 
     metrics_csv = io.BytesIO()
@@ -126,8 +137,8 @@ if __name__ == "__main__":
     for cid, confusion_matrix in strategy.confusion_matrices[-1].items():
         # Convert to format expected by Kubeflow
         cm_data = []
-        for i, col in enumerate(confusion_matrix.iteritems()):
-            for j, row in enumerate(col[1].iteritems()):
+        for i, col in enumerate(confusion_matrix):
+            for j, row in enumerate(col[1]):
                 if j > i:
                     break
                 cm_data.append((col[0], row[0], row[1]))
@@ -137,7 +148,8 @@ if __name__ == "__main__":
         confusion_csv = io.BytesIO()
         df_cm.to_csv(confusion_csv, header=False, index=False)
 
-        metadata["outputs"].append(
+        outputs: List[Any] = cast(List[Any], metadata["outputs"])
+        outputs.append(
             {
                 "type": "confusion_matrix",
                 "format": "csv",
@@ -146,7 +158,7 @@ if __name__ == "__main__":
                     {"name": "predicted", "type": "CATEGORY"},
                     {"name": "count", "type": "NUMBER"},
                 ],
-                "labels": confusion_matrix.columns.tolist(),
+                "labels": df_cm.columns.tolist(),
                 "storage": "inline",
                 "source": confusion_csv.getvalue().decode("utf-8"),
             }

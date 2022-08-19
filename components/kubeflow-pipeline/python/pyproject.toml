@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "fl_suite"
-version = "0.0.0+dev.9f3ccf6"
+version = "0.0.0+dev.ebe854e"
 description = "Katulu FL Suite Tools"
 authors = ["Katulu <eng@katulu.io>"]
 homepage = "https://katulu.io"
