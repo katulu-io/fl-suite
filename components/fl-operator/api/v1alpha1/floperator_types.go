@@ -31,6 +31,12 @@ type FlOperatorSpec struct {
 	FlOrchestratorURL  string `json:"orchestrator-url,omitempty"`
 	FlOrchestratorPort int16  `json:"orchestrator-port,omitempty"`
 	FlOrchestratorSNI  string `json:"orchestrator-sni,omitempty"`
+
+	RegistryCredentials *FlOperatorRegistryCredentials `json:"registry-credentials,omitempty"`
+}
+
+type FlOperatorRegistryCredentials struct {
+	Secret string `json:"secret"`
 }
 
 // FlOperatorStatus defines the observed state of FlOperator

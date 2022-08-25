@@ -41,6 +41,13 @@ spec:
                 type: string
               orchestrator-url:
                 type: string
+              registry-credentials:
+                properties:
+                  secret:
+                    type: string
+                required:
+                - secret
+                type: object
             type: object
           status:
             description: FlOperatorStatus defines the observed state of FlOperator

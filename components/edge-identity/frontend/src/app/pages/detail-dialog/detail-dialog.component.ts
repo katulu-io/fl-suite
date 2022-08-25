@@ -55,7 +55,18 @@ metadata:
 spec:
   orchestrator-url: ${edge.orchestrator_url}
   orchestrator-port: ${edge.orchestrator_port}
-  orchestrator-sni: ${edge.orchestrator_sni}`;
+  orchestrator-sni: ${edge.orchestrator_sni}
+  registry-credentials:
+    secret: regcred
+---
+apiVersion: v1
+kind: Secret
+type: kubernetes.io/dockerconfigjson
+metadata:
+  name: regcred
+data:
+  .dockerconfigjson: ${edge.registry_credentials}
+`;
   }
 
   ngOnInit() { }

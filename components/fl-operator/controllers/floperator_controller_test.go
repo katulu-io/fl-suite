@@ -42,6 +42,9 @@ var _ = Describe("FlOperator Controller", func() {
 				Spec: v1alpha1.FlOperatorSpec{
 					FlOrchestratorURL: "orchestrator-url",
 					FlOrchestratorSNI: "orchestrator-sni",
+					RegistryCredentials: &v1alpha1.FlOperatorRegistryCredentials{
+						Secret: "container-registry",
+					},
 				},
 			}
 			Expect(k8sClient.Create(ctx, flOperator)).Should(Succeed())
