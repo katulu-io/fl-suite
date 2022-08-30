@@ -39,17 +39,6 @@ replacements:
 patches:
   - patch: |-
       - op: add
-        path: /spec/template/spec/imagePullSecrets
-        value:
-          - name: regcred
-    target:
-      group: apps
-      version: v1
-      kind: Deployment
-      name: fl-operator-controller-manager
-      namespace: fl-operator-system
-  - patch: |-
-      - op: add
         path: /spec/template/spec/containers/0/env
         value:
           - name: SPIRE_AGENT_JOIN_TOKEN
