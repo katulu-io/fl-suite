@@ -49,7 +49,7 @@ def mnist_client():
     model.compile("adam", "sparse_categorical_crossentropy", metrics=["accuracy"])
 
     class MNISTClient(fl.client.NumPyClient):
-        def get_parameters(self):
+        def get_parameters(self, config):
             return model.get_weights()
 
         def fit(self, parameters, config):
