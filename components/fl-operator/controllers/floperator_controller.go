@@ -187,7 +187,7 @@ func (r *FlOperatorReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 			continue
 		}
 
-		pod := resources.NewPod(task, podName, task.Workflow, flOperator.Spec.RegistryCredentials.Secret)
+		pod := resources.NewPod(task, podName, task.Workflow, flOperator.Spec.RegistryCredentials)
 
 		err = ctrl.SetControllerReference(flOperator, pod, r.Scheme)
 		if err != nil {

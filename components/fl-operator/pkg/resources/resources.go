@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"os"
 
+	flv1alpha1 "github.com/katulu-io/fl-suite/fl-operator/api/v1alpha1"
 	pb "github.com/katulu-io/fl-suite/fl-orchestrator/pkg/api/fl_orchestrator/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -80,7 +81,12 @@ type SpireAgentConfigContext struct {
 }
 
 // Creates new pod for the flower-client
-func NewPod(task *pb.OrchestratorMessage_TaskSpec, name types.NamespacedName, envoyConfigName string, registryCredentialsSecret string) *corev1.Pod {
+func NewPod(
+	task *pb.OrchestratorMessage_TaskSpec,
+	name types.NamespacedName,
+	envoyConfigName string,
+	registryCredentials *flv1alpha1.FlOperatorRegistryCredentials,
+) *corev1.Pod {
 	shareProcessNamespace := true
 	labels := map[string]string{
 		FlClientDeploymentLabelKey: FlClientDeploymentLabelValue,
@@ -89,7 +95,7 @@ func NewPod(task *pb.OrchestratorMessage_TaskSpec, name types.NamespacedName, en
 	}
 	envoyConfigVolumeKey := "envoy-config"
 
-	return &corev1.Pod{
+	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name.Name,
 			Namespace: name.Namespace,
@@ -163,9 +169,14 @@ func NewPod(task *pb.OrchestratorMessage_TaskSpec, name types.NamespacedName, en
 					},
 				},
 			},
-			ImagePullSecrets: []corev1.LocalObjectReference{{Name: registryCredentialsSecret}},
 		},
 	}
+
+	if registryCredentials != nil {
+		pod.Spec.ImagePullSecrets = []corev1.LocalObjectReference{{Name: registryCredentials.Secret}}
+	}
+
+	return pod
 }
 
 // Creates a new envoy proxy deployment
