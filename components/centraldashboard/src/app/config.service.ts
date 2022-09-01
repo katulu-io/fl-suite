@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 
 const APPS = [
   { path: '_/jupyter', location: '/jupyter/', label: 'Notebook', icon: 'book' },
+  { path: '_/models', location: '/models/', label: 'Models', icon: 'settings_ethernet' },
   {
     path: '_/edges',
     location: '/edges/',

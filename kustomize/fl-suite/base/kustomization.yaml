@@ -14,6 +14,12 @@ resources:
   # Kubeflow Istio Resources
   - ../../../components/vendor/kubeflow-manifests/common/istio-1-11/kubeflow-istio-resources/base
 
+
+  # KNative
+  - ../../../components/vendor/kubeflow-manifests/common/knative/knative-serving/overlays/gateways
+  - ../../../components/vendor/kubeflow-manifests/common/istio-1-11/cluster-local-gateway/base
+  # KFServing
+  - ../../../components/vendor/kubeflow-manifests/apps/kfserving/upstream/overlays/kubeflow
   # Kubeflow Pipelines
   - ../../../components/vendor/kubeflow-manifests/apps/pipeline/upstream/env/platform-agnostic-multi-user-emissary
   # Central Dashboard
