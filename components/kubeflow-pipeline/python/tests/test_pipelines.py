@@ -4,19 +4,17 @@ import numpy as np
 from kfp.compiler import Compiler
 
 from fl_suite.analytics import _correlation, data
-from fl_suite.pipelines import _pipelines, fl_client
+from fl_suite.pipelines import training_pipeline, fl_client
 
 
-def test_fl_pipeline_with_fl_client_func():
+def test_fl_client_training():
     """Tests the fl pipeline using the fl_client decorator"""
 
     @fl_client()
     def client():
         pass
 
-    # For ease of testing, we test directly against the fl _pipeline.
-    # pylint: disable-next=protected-access
-    pipeline = _pipelines._pipeline(
+    pipeline = training_pipeline(
         fl_client=client,
         registry="localhost:5000",
         verify_registry_tls=False,
@@ -39,6 +37,8 @@ def test_fl_pipeline_with_fl_client_func():
             "prepare-build-context-build_context_path": "{{tasks.prepare-build-context.outputs.artifacts.prepare-build-context-build_context_path}}"  # noqa
         },
     )
+
+    assert_task_is_setup(dag, "setup-flower-server-infrastructure")
     assert_task_is_setup(
         dag,
         "flower-server",
@@ -51,15 +51,12 @@ def test_fl_pipeline_with_fl_client_func():
         },
         dependencies=["setup-flower-server-infrastructure"],
     )
-    assert_task_is_setup(dag, "setup-flower-server-infrastructure")
 
 
-def test_fl_pipeline_with_fl_client_context_url():
-    """Tests the fl pipeline using the client context url"""
+def test_fl_client_context_url_training():
+    """Tests the training pipeline using the client context url"""
 
-    # For ease of testing, we test directly against the fl _pipeline.
-    # pylint: disable-next=protected-access
-    pipeline = _pipelines._pipeline(
+    pipeline = training_pipeline(
         fl_client_context_url="a-non-existing-context-url",
         registry="localhost:5000",
         verify_registry_tls=False,
@@ -97,12 +94,10 @@ def test_fl_pipeline_with_fl_client_context_url():
     assert_task_is_setup(dag, "setup-flower-server-infrastructure")
 
 
-def test_fl_pipeline_with_fl_client_image():
-    """Tests the fl pipeline using the client image"""
+def test_fl_client_image_training():
+    """Tests the training pipeline using a static client image"""
 
-    # For ease of testing, we test directly against the fl _pipeline.
-    # pylint: disable-next=protected-access
-    pipeline = _pipelines._pipeline(
+    pipeline = training_pipeline(
         fl_client_image="fl_client_image:latest",
         registry="localhost:5000",
         verify_registry_tls=False,

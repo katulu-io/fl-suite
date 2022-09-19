@@ -70,7 +70,8 @@ FL Suite uses [Flower](https://flower.dev) as its mechanism for Federated Learni
 With this code wrapped by the `pipelines.fl_client` decorator, we can now run Federated Learning from a single function:
 
 ```python
-pipelines.run(mnist_client)
+training_pipeline = pipeline.training_pipeline(mnist_client)
+pipelines.run(training_pipeline)
 ```
 
 This function creates a new pipeline which prepares and distributes the client as wrapped by `pipelines.fl_client`, starts a Flower server and signals each connected client to start training.

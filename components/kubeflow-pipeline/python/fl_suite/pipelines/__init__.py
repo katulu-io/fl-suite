@@ -8,7 +8,7 @@ from ._flower_infrastructure import (
     setup_kubernetes_resources,
 )
 from ._flower_server import FLParameters, flwr_server
-from ._pipelines import build, create_image_tag, run
+from ._pipelines import build, create_image_tag, run, training_pipeline
 from ._prepare_context import download_build_context, prepare_context
 
 __all__ = [
@@ -25,4 +25,5 @@ __all__ = [
     "build",
     "create_image_tag",
     "run",
+    "training_pipeline",
 ]

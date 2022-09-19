@@ -13,14 +13,26 @@ from ._prepare_context import download_build_context
 
 
 # pylint: disable-next=too-many-arguments
-def _pipeline(
-    registry: str,
-    verify_registry_tls: bool,
+def training_pipeline(
     fl_client: Optional[Callable[[], ContainerOp]] = None,
     fl_client_context_url: Optional[str] = None,
     fl_client_image: Optional[str] = None,
     fl_server_image: Optional[str] = None,
+    registry: str = "ghcr.io/katulu-io/fl-suite",
+    verify_registry_tls: bool = True,
 ):
+    # TODO: Finish args
+    """Federated learning training pipeline.
+
+    Args:
+      fl_client
+      fl_client_context_url
+      fl_client_image
+      fl_server_image
+      registry: Registry where to pull the docker images
+      verify_registry_tls: Flag to verify or not the TLS connection to the registry
+    """
+
     if fl_client is None and fl_client_context_url is None and fl_client_image is None:
         raise RuntimeError(
             "either of: 'fl_client', 'fl_client_context_url' or 'fl_client_image' has to be set"
@@ -77,50 +89,29 @@ def _pipeline(
 
 # pylint: disable-next=too-many-arguments
 def build(
-    fl_client: Optional[Callable[[], ContainerOp]] = None,
-    fl_client_context_url: Optional[str] = None,
-    fl_client_image: Optional[str] = None,
-    fl_server_image: Optional[str] = None,
+    pipeline: Callable[..., None],
     package_path: str = "pipeline.yaml",
-    registry: str = "ghcr.io/katulu-io/fl-suite",
-    verify_registry_tls=True,
 ) -> None:
-    """Build a Kubeflow pipeline for federated learning."""
+    """Build a FL-Suite pipeline."""
 
-    fl_pipeline = _pipeline(
-        fl_client=fl_client,
-        fl_client_context_url=fl_client_context_url,
-        fl_client_image=fl_client_image,
-        fl_server_image=fl_server_image,
-        registry=registry,
-        verify_registry_tls=verify_registry_tls,
-    )
     compiler = Compiler()
-    compiler.compile(fl_pipeline, package_path)
+    compiler.compile(pipeline, package_path)
 
 
 # pylint: disable-next=too-many-arguments
 def run(
-    fl_client: Optional[Callable[[], ContainerOp]] = None,
-    fl_client_context_url: Optional[str] = None,
-    fl_client_image: Optional[str] = None,
-    fl_server_image: Optional[str] = None,
+    pipeline: Callable[..., None],
     fl_params: Optional[FLParameters] = None,
     host: Optional[str] = None,
     image_tag: str = "",
     experiment_name: Optional[str] = None,
-    registry: str = "ghcr.io/katulu-io/fl-suite",
-    verify_registry_tls: bool = True,
 ):
-    """Creates and runs a Kubeflow pipeline for federated learning.
+    # TODO: Finish args
+    """Creates and runs a FL-Suite pipeline.
 
     Args:
-      client_context: (kubeflow's) minio path where the client code is hosted
-      num_rounds: The number of rounds of training.
-      num_local_rounds: The number of local training rounds.
-      min_available_clients: Minimum number of clients to start training.
-      min_fit_clients: Minimum number of clients used to fit weights.
-      min_eval_clients: Minimum number of client used during evaluation.
+      pipeline:
+      fl_params:
       host: The host name to use to talk to Kubeflow Pipelines. If not set, the in-cluster
           service DNS name will be used, which only works if the current environment is a pod
           in the same cluster (such as a Jupyter instance spawned by Kubeflow's
@@ -128,8 +119,6 @@ def run(
           proxy connection, then set it to something like "127.0.0.1:8080/pipeline.
       image_tag: The client image name and tag to set.
       experiment_name: The Kubeflow Pipelines experiment to use.
-      registry: Registry where to pull the docker images
-      verify_registry_tls: Flag to verify or not the TLS connection to the registry
     """
     if fl_params is None:
         fl_params = FLParameters()
@@ -139,14 +128,7 @@ def run(
 
     client = Client(host)
     pipeline_run = client.create_run_from_pipeline_func(
-        _pipeline(
-            fl_client=fl_client,
-            fl_client_context_url=fl_client_context_url,
-            fl_client_image=fl_client_image,
-            fl_server_image=fl_server_image,
-            registry=registry,
-            verify_registry_tls=verify_registry_tls,
-        ),
+        pipeline,
         arguments={
             "image_tag": image_tag,
             "num_rounds": fl_params.num_rounds,
