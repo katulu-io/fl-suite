@@ -89,8 +89,8 @@ def prepare_analytics_client(
                     'cat << EOF > "$2/Dockerfile"\n'
                     f"FROM {analytics_client_base}\n"
                     "RUN python -m pip install --no-cache-dir $0\n"
-                    "COPY data.py /pipelines/component/flwr_analytics_client/data.py\n"
-                    'ENTRYPOINT [ "python3", "/pipelines/component/flwr_analytics_client" ]\n'
+                    "COPY data.py /app/flwr_analytics_client/data.py\n"
+                    'ENTRYPOINT [ "python3", "/app/main.py" ]\n'
                     "EOF\n"
                     'ls "$2"',
                     InputValuePlaceholder("pip_packages"),
