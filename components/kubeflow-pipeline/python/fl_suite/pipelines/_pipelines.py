@@ -57,7 +57,7 @@ def _pipeline(
                     verify_registry_tls=verify_registry_tls,
                 )
             elif fl_client_image is not None:
-                static_image(fl_client_image)
+                static_image(fl_client_image, registry=registry)
 
             setup_kubernetes_resources_op = setup_kubernetes_resources()
             flwr_server_op = flwr_server(
