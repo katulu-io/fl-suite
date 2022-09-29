@@ -27,6 +27,7 @@ We start by importing the necessary package:
 
 ```python
 from fl_suite import pipelines
+from fl_suite.context import context_from_func
 ```
 
 The `fl_suite.pipelines` package provides functions to describe Federated Learning clients and to build and run Federated Learning pipelines. A pipeline contains all the steps that need to be done on the server for Federated Learning. This includes cluster preparation for authentication, preparing the Federated Learning client code for distribution to the clients, and starting a Federated Learning server.
@@ -34,7 +35,7 @@ The `fl_suite.pipelines` package provides functions to describe Federated Learni
 Let's create a simple Federated Learning client that loads the MNIST dataset and trains a simple model. The `pipelines.fl_client` decorator indicates that this is the Federated Learning client code.
 
 ```python
-@pipelines.fl_client(packages=["tensorflow", "flwr==1.0.0"])
+@context_from_func(packages=["tensorflow", "flwr==1.0.0"])
 def mnist_client():
     import flwr as fl
     import tensorflow as tf

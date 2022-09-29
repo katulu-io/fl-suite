@@ -78,12 +78,13 @@ def correlation_pipeline(
     @pipeline()
     def correlation(
         min_available_clients: int,
-        image_tag: str = create_image_tag("correlation-client"),
+        image_tag: str = create_image_tag(),
     ) -> None:
         with ExitHandler(cleanup_kubernetes_resources()):
             prepare_context_op = fl_client(registry, verify_registry_tls)
             build_image(
                 build_context_path=prepare_context_op.outputs["build_context_path"],
+                image_name="flower-client",
                 image_tag=image_tag,
                 registry=registry,
                 verify_registry_tls=verify_registry_tls,

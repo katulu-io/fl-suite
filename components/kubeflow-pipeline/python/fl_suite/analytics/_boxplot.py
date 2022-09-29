@@ -103,18 +103,20 @@ def boxplot_pipeline(
 ):
     """Create a boxplot pipeline."""
 
+    # pylint: disable-next=too-many-arguments
     @pipeline(name="boxplot")
     def h_pipeline(
         min_available_clients: int,
         nbins: int,
         hmin: float,
         hmax: float,
-        image_tag: str = create_image_tag("boxplot-client"),
+        image_tag: str = create_image_tag(),
     ) -> None:
         with ExitHandler(cleanup_kubernetes_resources()):
             prepare_context_op = fl_client(registry, verify_registry_tls)
             build_image(
                 build_context_path=prepare_context_op.outputs["build_context_path"],
+                image_name="boxplot-client",
                 image_tag=image_tag,
                 registry=registry,
                 verify_registry_tls=verify_registry_tls,
