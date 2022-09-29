@@ -6,7 +6,7 @@ import numpy as np
 from kfp.compiler import Compiler
 
 from fl_suite.analytics import _correlation, data
-from fl_suite.pipelines import training_pipeline
+from fl_suite.pipelines import training_pipeline, training_and_serving_pipeline, FLOutput
 from fl_suite.context import context_from_func, context_from_python_files
 
 
@@ -212,6 +212,83 @@ def test_correlation_pipeline():
         pipeline,
     )
     assert_task_in_pipeline(Task("setup-flower-server-infrastructure"), pipeline)
+
+
+def test_fl_client_training_and_serving():
+    """Tests the training_and_serving pipeline with a decorated fl_client"""
+
+    @context_from_func()
+    def client():
+        pass
+
+    pipeline = parse_pipeline(
+        training_and_serving_pipeline(
+            fl_client=client,
+            fl_outputs=[
+                FLOutput("output_path", "Directory", "--output-path"),
+                FLOutput("MLPipeline_ui_metadata", "UI metadata", "--metadata-output-path"),
+                FLOutput("ml_model_path", "Directory", "--ml-model-path"),
+            ],
+            registry="localhost:5000",
+            verify_registry_tls=False,
+        )
+    )
+
+    assert_exit_handler_in_pipeline(Task("cleanup-flower-server-infrastructure"), pipeline)
+
+    assert_task_in_pipeline(Task("setup-build-context-flower-client"), pipeline)
+    assert_task_in_pipeline(
+        Task(
+            "build-image-flower-client",
+            dependencies=["setup-build-context-flower-client"],
+            parameters={
+                "image_tag": "{{inputs.parameters.image_tag}}",
+            },
+            artifacts={
+                # pylint: disable-next=line-too-long
+                "setup-build-context-flower-client-build_context_path": "{{tasks.setup-build-context-flower-client.outputs.artifacts.setup-build-context-flower-client-build_context_path}}"  # noqa
+            },
+        ),
+        pipeline,
+    )
+
+    assert_task_in_pipeline(Task("setup-flower-server-infrastructure"), pipeline)
+    assert_task_in_pipeline(
+        Task(
+            "flower-server",
+            parameters={
+                "min_available_clients": "{{inputs.parameters.min_available_clients}}",
+                "min_eval_clients": "{{inputs.parameters.min_eval_clients}}",
+                "min_fit_clients": "{{inputs.parameters.min_fit_clients}}",
+                "num_local_rounds": "{{inputs.parameters.num_local_rounds}}",
+                "num_rounds": "{{inputs.parameters.num_rounds}}",
+            },
+            dependencies=["setup-flower-server-infrastructure"],
+        ),
+        pipeline,
+    )
+    assert_task_in_pipeline(
+        Task(
+            "save-ml-model",
+            dependencies=["flower-server"],
+            artifacts={
+                # pylint: disable-next=line-too-long
+                "flower-server-ml_model_path": "{{tasks.flower-server.outputs.artifacts.flower-server-ml_model_path}}"
+            },
+        ),
+        pipeline,
+    )
+    assert_task_in_pipeline(
+        Task(
+            "serve-ml-model",
+            dependencies=["save-ml-model"],
+            artifacts={
+                # pylint: disable-next=line-too-long
+                "save-ml-model-minio_full_path": "{{tasks.save-ml-model.outputs.artifacts.save-ml-model-minio_full_path}}"
+            },
+        ),
+        pipeline,
+    )
 
 
 def parse_pipeline(pipeline) -> Dict[str, Any]:

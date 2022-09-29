@@ -47,6 +47,12 @@ configMapGenerator:
     files:
       - agent.conf=config/spire-agent.conf
 
+  - name: config-domain
+    namespace: knative-serving
+    behavior: replace
+    literals:
+      - katulu.io=""
+
 patches:
   - patch: |-
       - op: add

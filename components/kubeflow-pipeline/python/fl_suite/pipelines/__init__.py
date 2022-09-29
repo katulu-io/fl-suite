@@ -7,7 +7,13 @@ from ._flower_infrastructure import (
     setup_kubernetes_resources,
 )
 from ._flower_server import FLOutput, FLParameters, flwr_server
-from ._pipelines import build, create_image_tag, run, training_pipeline
+from ._pipelines import (
+    build,
+    create_image_tag,
+    run,
+    training_and_serving_pipeline,
+    training_pipeline,
+)
 from ._setup_context import setup_context
 
 __all__ = [
@@ -24,4 +30,5 @@ __all__ = [
     "create_image_tag",
     "run",
     "training_pipeline",
+    "training_and_serving_pipeline",
 ]

@@ -5,4 +5,17 @@ kind: Kustomization
 namespace: katulu-fl
 
 resources:
-- envoyproxy-gateway.yaml
+  - envoyproxy-gateway.yaml
+  - inference-service-account.yaml
+
+secretGenerator:
+  - name: minio-service-creds
+    type: Opaque
+    literals:
+      - AWS_ACCESS_KEY_ID=minio
+      - AWS_SECRET_ACCESS_KEY=minio123
+    options:
+      disableNameSuffixHash: true
+      annotations:
+        serving.kubeflow.org/s3-endpoint: minio-service.kubeflow:9000
+        serving.kubeflow.org/s3-usehttps: "0"
