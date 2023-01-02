@@ -82,7 +82,6 @@ func main() {
 		Client:               mgr.GetClient(),
 		Scheme:               mgr.GetScheme(),
 		EnvoyproxyConfigFile: "./deployment/envoyproxy.yaml.tpl",
-		OrchestratorClient:   nil,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "FlOperator")
 		os.Exit(1)

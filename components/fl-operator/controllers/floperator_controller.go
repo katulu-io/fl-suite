@@ -43,7 +43,6 @@ type FlOperatorReconciler struct {
 	client.Client
 	Scheme               *runtime.Scheme
 	EnvoyproxyConfigFile string
-	OrchestratorClient   *orchestratorClient.Client
 }
 
 const (
@@ -107,26 +106,28 @@ func (r *FlOperatorReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	}
 
 	// Create gRPC client for connection to FL-Orchestrator
-	if r.OrchestratorClient == nil {
-		log.Info("Creating OrchestratorClient")
+	log.Info("Creating OrchestratorClient")
 
-		timeout := time.Second * 30 // TODO move this into the spec?
-		serverAddress := fmt.Sprintf("%s.%s:9080", serviceNameEnvoyProxy, req.Namespace)
-		dialOptions := []grpc.DialOption{
-			grpc.WithTransportCredentials(insecure.NewCredentials()),
-		}
-		conn, err := grpc.Dial(serverAddress, dialOptions...)
-		if err != nil {
-			log.Error(err, "Could not create gRPC connection")
-			return ctrl.Result{}, err
-		}
-
-		cl := orchestratorClient.NewClient(conn, timeout)
-		r.OrchestratorClient = &cl
+	timeout := time.Second * 30 // TODO move this into the spec?
+	serverAddress := fmt.Sprintf("%s.%s:9080", serviceNameEnvoyProxy, req.Namespace)
+	dialOptions := []grpc.DialOption{
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	}
+	conn, err := grpc.Dial(serverAddress, dialOptions...)
+	if err != nil {
+		log.Error(err, "Could not create gRPC connection")
+		return ctrl.Result{}, err
 	}
 
+	// We can run into situations where we have a gRPC connection, but aren't
+	// yet able to use it because the envoy proxy isn't fully set up yet.
+	// As a result, we create a new connection on every call to 'Reconcile'.
+	// Some connections might fail but these failures won't affect later calls
+	// to 'Reconcile' as we're not caching failed connections.
+	cl := orchestratorClient.NewClient(conn, timeout)
+
 	// Fetch tasks from FL-Orchestrator
-	response, err := r.OrchestratorClient.GetTasks(ctx)
+	response, err := cl.GetTasks(ctx)
 	if err != nil {
 		log.Error(err, "Could not fetch tasks")
 		return ctrl.Result{
