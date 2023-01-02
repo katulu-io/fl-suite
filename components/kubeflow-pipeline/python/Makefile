@@ -26,14 +26,11 @@ build: fl_suite/_version.py
 	poetry build
 .PHONY: build
 
-dist:
-	@echo "dist not implemented"
-.PHONY: dist
-
-push:
-	@echo "push not implemented"
-.PHONY: push
+dist push:
+	@echo "$@ not implemented"
+.PHONY: dist push
 
 clean:
-	@rm -rf dist
+	-rm -rf dist
+	-rm fl_suite/_version.py
 .PHONY: clean

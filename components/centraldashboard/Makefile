@@ -43,7 +43,8 @@ dev:
 .PHONY: dev
 
 clean:
-	@rm -r dist
+	-rm -r dist
+	-rm kustomization.yaml
 .PHONY: clean
 
 clean-dev:

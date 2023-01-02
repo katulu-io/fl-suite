@@ -11,7 +11,7 @@ PIP_VERSION = $(shell echo "${MAKEVAR_VERSION}" | sed -e "s/-/+/" -e "s/-/./g")
 POETRY_STAMP := .poetry.stamp
 
 # Build is not needed because the dist target builds the application via docker multi-stage
-lint test build:
+clean lint test build:
 	@echo "$@ not implemented"
 .PHONY: lint test build
 

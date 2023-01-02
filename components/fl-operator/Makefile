@@ -90,5 +90,6 @@ lint:
 .PHONY: lint
 
 clean:
-	rm -rf bin/
+	-rm -rf bin/
+	-rm kustomization.yaml
 .PHONY: clean

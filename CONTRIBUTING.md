@@ -18,7 +18,7 @@ The container is compatible with [VS Code Remote](https://marketplace.visualstud
 
 ## Test, Build, Dev, Dist, Push, and Clean
 
-Every component MUST come with `Makefile` and define a `lint`, `test`, `build`, `dist`, `push`, `dev`, `clean-dev` and `clean` target. The Makefile is used to set up and configure how to _lint_, _test_, _build_, _dist_ (package), _dev_ (develop locally), and _push_ (publish) a component. The file MUST also `-include` the `.devcontainer/targets.mk` to add targets which will execute within the dev-container.
+Every component MUST come with `Makefile` and define a `lint`, `test`, `build`, `dist`, `push`, `dev`and `clean` target. The Makefile is used to set up and configure how to _lint_, _test_, _build_, _dist_ (package), _dev_ (develop locally), and _push_ (publish) a component. The file MUST also `-include` the `.devcontainer/targets.mk` to add targets which will execute within the dev-container.
 
 For ease of development, all components MUST provide a _dev_ target that defines how to run it locally, e.g docker-compose up -d or a jupyter-notebook run. If any component-dependency exists mocks MUST be provided, and be available and documented to be run side-by-side with the component. The same way, a _clean-dev_ target MUST be provided to stop/destroy the locally run component, e.g docker-compose stop && docker-compose rm -f.
 
@@ -56,7 +56,7 @@ To minimize security-vulnerabilities all components deployed in Kubernetes SHOUL
 
 ## End-to-end testing
 
-Every new feature introduced into Katulu-FL, via the components, SHOULD include an end-to-end test, e.g A new anomaly dected in the factory sends an alert to the corresponding organization.
+Every new feature introduced into Katulu-FL, via the components, SHOULD include an end-to-end test, e.g A new anomaly detected in the factory sends an alert to the corresponding organization.
 
 ## Version Control
 
@@ -103,7 +103,7 @@ The following commit types are allowed:
 - **refactor** -
   use this type for adjustments to improve maintainability or performance
 - **test** - use this one for commits that add missing tests
-- **chore** - use this type for _maintainance_ commits e.g. removing old files
+- **chore** - use this type for _maintenance_ commits e.g. removing old files
 - **ci** - use this type for CI adjustments
 - **style** - use this one for commits that fix formatting and linting errors
 
@@ -211,14 +211,14 @@ Once you've created the `.env` file export the contents to make them available.
 export $(cat .env)
 ```
 
-Now run make `build`, `dis`, `push` and `release`.
+Now run make `build`, `dist`, `push` and `release`.
 
 ```sh
 make build dist push release
 ```
 
-_NOTE: You might want to run some of the targes in the devcontainer to provide the correct tooling._
+_NOTE: You might want to run some of the targets in the devcontainer to provide the correct tooling._
 
 ## Upgrade Dependencies
 
-All dependencies SHALL be updated regularly to maintian an up to date and secure product. Updates SHOULD consider backward compatibillty and MUST document compatibillty issues as documented.
+All dependencies SHALL be updated regularly to maintain an up-to-date and secure product. Updates SHOULD consider backward compatibility and MUST document compatibility issues as documented.

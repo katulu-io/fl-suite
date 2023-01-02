@@ -15,13 +15,9 @@ lint: ${POETRY_STAMP}
 	poetry run python -m mypy flwr_server/
 .PHONY: lint
 
-test:
-	@echo "test not implemented"
-.PHONY: test
-
-build:
-	@echo "build not implemented"
-.PHONY: build
+build test clean:
+	@echo "$@ not implemented"
+.PHONY: build test clean
 
 dist:
 	poetry export -o requirements.txt
@@ -31,6 +27,3 @@ dist:
 push:
 	docker push ${MAKEVAR_REGISTRY}/fl-server:${CONTAINER_TAG}
 .PHONY: push
-
-clean:
-.PHONY: clean
