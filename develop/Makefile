@@ -2,9 +2,9 @@ DOCKER_NETWORK_NAME = kind
 
 -include ../.devcontainer/targets.mk
 
-dependencies lint test build dist push:
+clean dependencies lint test build dist push:
 	@echo "$@ not implemented"
-.PHONY: dependencies lint test build dist push
+.PHONY: clean dependencies lint test build dist push
 
 local-registry:
 	docker network create kind || true

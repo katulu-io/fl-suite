@@ -36,8 +36,9 @@ install:
 .PHONY: install
 
 clean:
-	rm -rf bin
-	rm -rf dist
+	-rm -rf bin
+	-rm -rf dist
+	-rm kustomization.yaml
 .PHONY: clean
 
 bin/protoc:

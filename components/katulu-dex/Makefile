@@ -6,21 +6,9 @@ MAKEVAR_REGISTRY?=ghcr.io/katulu-io/fl-suite
 # Drop Semver build metadata as tags may contain lowercase and uppercase letters, digits, underscores, periods and dashes.
 CONTAINER_TAG ?= $(shell echo "${MAKEVAR_VERSION}" | sed "s/\+[0-9a-zA-Z-]*//")
 
-dependencies:
-	@echo "dependencies not implemented"
-.PHONY: dependencies
-
-lint:
-	@echo "lint not implemented"
-.PHONY: lint
-
-test:
-	@echo "test not implemented"
-.PHONY: test
-
-build:
-	@echo "build not implemented"
-.PHONY: build
+dependencies lint test build:
+	@echo "$@ not implemented"
+.PHONY: dependencies lint test build
 
 dist:
 	DOCKER_BUILDKIT=1 docker build -t ${MAKEVAR_REGISTRY}/dex:${CONTAINER_TAG} .
@@ -36,3 +24,7 @@ install:
 push:
 	docker push ${MAKEVAR_REGISTRY}/dex:${CONTAINER_TAG}
 .PHONY: push
+
+clean:
+	-rm kustomization.yaml
+.PHONY: clea

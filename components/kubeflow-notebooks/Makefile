@@ -8,17 +8,9 @@ IMAGE_URL = ${MAKEVAR_REGISTRY}/${IMAGE_NAME}:${CONTAINER_TAG}
 
 PIP_VERSION = $(shell echo "${MAKEVAR_VERSION}" | sed -e "s/-/+/" -e "s/-/./g")
 
-lint:
-	@echo "lint not implemented"
-.PHONY: lint
-
-test:
-	@echo "test not implemented"
-.PHONY: test
-
-build:
-	@echo "build not implemented"
-.PHONY: build
+lint test build:
+	@echo "$@ not implemented"
+.PHONY: lint test build
 
 dist: manifests
 	mkdir -p dist
@@ -47,5 +39,6 @@ uninstall:
 .PHONY: uninstall
 
 clean:
-	@rm -rf dist
+	-rm -rf dist
+	-rm kustomization.yaml
 .PHONY: clean

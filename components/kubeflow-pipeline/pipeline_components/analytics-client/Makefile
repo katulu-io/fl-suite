@@ -19,9 +19,9 @@ test: ${POETRY_STAMP}
 	poetry run python -m pytest
 .PHONY: test
 
-build:
-	@echo "build not implemented"
-.PHONY: build
+build clean:
+	@echo "$@ not implemented"
+.PHONY: build clean
 
 dist:
 	poetry export -o requirements.txt
@@ -31,6 +31,3 @@ dist:
 push:
 	docker push ${MAKEVAR_REGISTRY}/analytics-client:${CONTAINER_TAG}
 .PHONY: push
-
-clean:
-.PHONY: clean
